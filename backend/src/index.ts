@@ -7,7 +7,21 @@ import shoppingRouter from './routes/shopping';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS: 環境変数 ALLOWED_ORIGINS で許可オリジンをカンマ区切りで指定
+// 例: https://yourname.github.io,https://yourdomain.com
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+  : ['http://localhost:8081', 'http://localhost:19006'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // curl / モバイルアプリ (origin なし) は許可
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: ${origin} is not allowed`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', app: 'Olive' }));
