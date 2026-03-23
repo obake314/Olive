@@ -1,0 +1,147 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { MealPlan, MealType, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '../types';
+import { Colors } from './Colors';
+import { MealTypeTag } from './MealTypeTag';
+
+interface Props {
+  weekStart: Date;
+  mealPlans: MealPlan[];
+  onDayPress: (date: string) => void;
+  onMealPress: (plan: MealPlan) => void;
+  onAddMeal: (date: string, mealType: MealType) => void;
+}
+
+const MEAL_BG: Record<MealType, string> = {
+  breakfast: Colors.breakfast,
+  lunch: Colors.lunch,
+  dinner: Colors.dinner,
+};
+
+function formatDate(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
+
+function getWeekDays(weekStart: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+const DAY_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
+
+export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal }: Props) {
+  const days = getWeekDays(weekStart);
+  const today = formatDate(new Date());
+
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {days.map((day, idx) => {
+        const dateStr = formatDate(day);
+        const isToday = dateStr === today;
+        const dayPlans = mealPlans.filter(p => p.date === dateStr);
+
+        return (
+          <View key={dateStr} style={styles.dayRow}>
+            <View style={[styles.dayHeader, isToday && styles.todayHeader]}>
+              <Text style={[styles.dayLabel, isToday && styles.todayLabel]}>
+                {DAY_LABELS[idx]}
+              </Text>
+              <Text style={[styles.dateLabel, isToday && styles.todayLabel]}>
+                {day.getMonth() + 1}/{day.getDate()}
+              </Text>
+              {isToday && <View style={styles.todayDot} />}
+            </View>
+
+            <View style={styles.mealsContainer}>
+              {MEAL_TYPE_ORDER.map(mealType => {
+                const mealsForSlot = dayPlans.filter(p => p.meal_type === mealType);
+                return (
+                  <View key={mealType} style={styles.mealSlot}>
+                    <Text style={styles.mealTypeLabel}>{MEAL_TYPE_LABELS[mealType]}</Text>
+                    <View style={styles.mealItems}>
+                      {mealsForSlot.map(plan => (
+                        <TouchableOpacity
+                          key={plan.id}
+                          style={[styles.mealChip, { backgroundColor: MEAL_BG[mealType] }]}
+                          onPress={() => onMealPress(plan)}
+                        >
+                          <Text style={styles.mealChipText} numberOfLines={1}>
+                            {plan.dish_name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                      <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => onAddMeal(dateStr, mealType)}
+                      >
+                        <Text style={styles.addButtonText}>+ 追加</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+  dayRow: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    marginHorizontal: 12,
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  dayHeader: {
+    width: 48,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  todayHeader: { backgroundColor: Colors.primary },
+  dayLabel: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  dateLabel: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  todayLabel: { color: '#fff' },
+  todayDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#fff',
+    marginTop: 4,
+  },
+  mealsContainer: { flex: 1, padding: 8 },
+  mealSlot: { marginBottom: 6 },
+  mealTypeLabel: { fontSize: 10, color: Colors.textSecondary, marginBottom: 3 },
+  mealItems: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  mealChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    maxWidth: 160,
+  },
+  mealChipText: { fontSize: 13, fontWeight: '500', color: Colors.text },
+  addButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+  },
+  addButtonText: { fontSize: 12, color: Colors.textSecondary },
+});

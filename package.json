@@ -1,0 +1,13 @@
+{
+  "name": "olive",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Family meal planning app (iOS & Web)",
+  "scripts": {
+    "backend": "cd backend && npm run dev",
+    "app": "cd app && npx expo start",
+    "app:web": "cd app && npx expo start --web",
+    "install:all": "npm install --prefix backend && npm install --prefix app",
+    "build:backend": "cd backend && npm run build"
+  }
+}
