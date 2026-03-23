@@ -77,7 +77,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: docker-compose.yml
-          target: /opt/olive
+          target: /app/olive
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -87,7 +87,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd /opt/olive
+            cd /app/olive
 
             # GitHub Container Registry にログイン
             echo "${{ secrets.GITHUB_TOKEN }}" | \
@@ -116,8 +116,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             sleep 5
-            cd /opt/olive
+            cd /app/olive
             docker compose ps
-            # ヘルスチェック
-            curl -sf http://localhost/api/health || (echo "❌ Health check failed" && exit 1)
+            # ヘルスチェック (backend に直接確認)
+            curl -sf http://localhost:3000/health || (echo "❌ Health check failed" && exit 1)
             echo "✅ Health check passed"
