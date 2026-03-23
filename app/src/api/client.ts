@@ -1,7 +1,8 @@
 import { Dish, MealPlan, MealType, ShoppingItem } from '../types';
 
-// Change this to your backend URL in production
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+// Development: http://localhost:3000
+// Production (Docker): same origin via nginx /api proxy
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
