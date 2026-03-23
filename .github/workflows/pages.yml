@@ -37,13 +37,10 @@ jobs:
       - name: Build Expo web (static export)
         working-directory: app
         env:
-          # VPS バックエンドの URL を GitHub Actions Variable に設定してください
-          # Settings > Variables > Actions > VITE_API_URL
+          # VPS バックエンドの URL を GitHub Actions Variable に設定
+          # Settings > Variables > Actions > BACKEND_API_URL
           EXPO_PUBLIC_API_URL: ${{ vars.BACKEND_API_URL }}
         run: npx expo export --platform web
-
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
