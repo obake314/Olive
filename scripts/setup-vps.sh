@@ -29,8 +29,8 @@ else
 fi
 
 # デプロイディレクトリ作成
-mkdir -p /opt/olive
-echo "✅ /opt/olive ディレクトリ作成完了"
+mkdir -p /app/olive
+echo "✅ /app/olive ディレクトリ作成完了"
 
 # ファイアウォール設定 (ufw がある場合)
 if command -v ufw &>/dev/null; then
@@ -45,10 +45,15 @@ echo ""
 echo "✅ VPS セットアップ完了!"
 echo ""
 echo "次のステップ:"
-echo "  1. GitHub リポジトリの Settings > Secrets > Actions に以下を追加:"
-echo "     VPS_HOST   = このVPSのIPアドレス"
-echo "     VPS_USER   = SSHユーザー名 (例: ubuntu)"
+echo "  1. DNS設定: olive.eclo.info の A レコードをこのVPSのIPアドレスに向ける"
+echo ""
+echo "  2. GitHub リポジトリの Settings > Secrets > Actions に以下を追加:"
+echo "     VPS_HOST    = このVPSのIPアドレス (例: 85.131.248.107)"
+echo "     VPS_USER    = SSHユーザー名 (例: root)"
 echo "     VPS_SSH_KEY = SSH秘密鍵の内容"
 echo ""
-echo "  2. mainブランチにpushすると自動デプロイが始まります"
-echo "  3. デプロイ後: http://<VPS_IP>/ でアクセス可能"
+echo "  3. GitHub リポジトリの Settings > Variables > Actions に以下を追加:"
+echo "     ALLOWED_ORIGINS = http://olive.eclo.info"
+echo ""
+echo "  4. mainブランチにpushすると自動デプロイが始まります"
+echo "  5. デプロイ後: http://olive.eclo.info/ でアクセス可能"

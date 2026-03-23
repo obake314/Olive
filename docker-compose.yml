@@ -6,9 +6,7 @@ services:
     environment:
       PORT: "3000"
       DB_PATH: /data/olive.db
-      # GitHub Pages URL など許可オリジン (カンマ区切り)
-      # 例: https://yourname.github.io,https://yourdomain.com
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8081}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://olive.eclo.info}
     volumes:
       - olive-data:/data
     networks:
@@ -30,9 +28,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    environment:
-      # nginx がリバースプロキシとして /api を backend に転送
-      BACKEND_URL: "http://backend:3000"
 
 volumes:
   olive-data:
