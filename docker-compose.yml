@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY}/olive-backend:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/olive-backend:${IMAGE_TAG:-latest}
     container_name: olive-backend
     restart: unless-stopped
     environment:
@@ -18,7 +18,7 @@ services:
       retries: 3
 
   web:
-    image: ghcr.io/${GITHUB_REPOSITORY}/olive-web:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/olive-web:${IMAGE_TAG:-latest}
     container_name: olive-web
     restart: unless-stopped
     ports:
