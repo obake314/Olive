@@ -94,12 +94,14 @@ jobs:
               docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # .env を更新
-            printf 'GITHUB_REPOSITORY_OWNER=%s\nIMAGE_TAG=%s\nALLOWED_ORIGINS=https://olive.eclo.info\nRESEND_API_KEY=%s\nAPP_URL=https://olive.eclo.info\nADMIN_PASSWORD=%s\n' \
-              '${{ github.repository_owner }}' \
-              '${{ needs.build-and-push.outputs.image_tag }}' \
-              '${{ secrets.RESEND_API_KEY }}' \
-              '${{ secrets.ADMIN_PASSWORD }}' \
-              > .env
+            {
+              echo "GITHUB_REPOSITORY_OWNER=${{ github.repository_owner }}"
+              echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}"
+              echo "ALLOWED_ORIGINS=https://olive.eclo.info"
+              echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}"
+              echo "APP_URL=https://olive.eclo.info"
+              echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}"
+            } > .env
 
             # 新しいイメージをプル
             docker compose pull
