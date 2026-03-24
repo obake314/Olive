@@ -1,4 +1,4 @@
-import { Dish, Ingredient, MealPlan, MealType, ShoppingItem, Todo } from '../types';
+import { Dish, Ingredient, MealPlan, MealType, ShoppingItem, Todo, Family, FamilyMember } from '../types';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || '/api';
 
@@ -87,6 +87,14 @@ export const todosApi = {
   update: (id: string, data: { title: string; due_date?: string }) =>
     request<Todo>(`/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/todos/${id}`, { method: 'DELETE' }),
+};
+
+// Family
+export const familyApi = {
+  get: () => request<{ family: Family | null; members: FamilyMember[] }>('/family'),
+  create: (name: string) => request<Family>('/family', { method: 'POST', body: JSON.stringify({ name }) }),
+  invite: (email: string) => request<{ message: string }>('/family/invite', { method: 'POST', body: JSON.stringify({ email }) }),
+  leave: () => request<{ message: string }>('/family/leave', { method: 'DELETE' }),
 };
 
 // Shopping

@@ -39,6 +39,18 @@ export interface ShoppingItem {
   auto?: boolean;
 }
 
+export interface FamilyMember {
+  id: string;
+  name: string;
+  email: string;
+  status: 'pending' | 'active';
+}
+
+export interface Family {
+  id: string;
+  name: string;
+}
+
 export interface Todo {
   id: string;
   title: string;

@@ -6,6 +6,7 @@ import shoppingRouter from './routes/shopping';
 import authRouter from './routes/auth';
 import recipeExtractRouter from './routes/recipeExtract';
 import todosRouter from './routes/todos';
+import familyRouter from './routes/family';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,7 @@ app.use('/dishes', dishesRouter);
 app.use('/meal-plans', mealPlansRouter);
 app.use('/shopping', shoppingRouter);
 app.use('/todos', todosRouter);
+app.use('/family', familyRouter);
 
 app.listen(PORT, () => {
   console.log(`Olive API running on port ${PORT}`);

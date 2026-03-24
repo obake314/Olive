@@ -73,6 +73,14 @@ export default function TabLayout() {
           headerTitle: 'Olive TODO',
         }}
       />
+      <Tabs.Screen
+        name="family"
+        options={{
+          title: '家族',
+          tabBarIcon: ({ focused }) => <TabIcon label="家" focused={focused} />,
+          headerTitle: 'Olive 家族',
+        }}
+      />
     </Tabs>
   );
 }

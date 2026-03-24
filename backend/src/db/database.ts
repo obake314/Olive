@@ -100,6 +100,38 @@ function initSchema(): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_todos_user_id ON todos(user_id);
+
+    CREATE TABLE IF NOT EXISTS families (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS family_members (
+      id TEXT PRIMARY KEY,
+      family_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','active')),
+      invited_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(family_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS family_invitations (
+      token TEXT PRIMARY KEY,
+      family_id TEXT NOT NULL,
+      invited_email TEXT NOT NULL,
+      invited_by TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_family_members_user ON family_members(user_id);
+    CREATE INDEX IF NOT EXISTS idx_family_members_family ON family_members(family_id);
   `);
   // マイグレーション: 既存テーブルにカラム追加
   try { db.exec(`ALTER TABLE dishes ADD COLUMN recipe_text TEXT`); } catch {}
@@ -127,6 +159,19 @@ const DEFAULT_DISH_NAMES = [
   '茶碗蒸し', 'ひじきと大豆の五目煮', 'ほうれん草のごま和え', 'かぼちゃの煮物', '味噌汁', '焼き魚',
   '卵焼き/だし巻き卵', 'お好み焼き', 'たこ焼き', '餃子', 'カレーライス', '筑前煮', '豆腐'
 ];
+
+/** ユーザーが属するアクティブな家族メンバー全員の user_id を返す（自分を含む） */
+export function getFamilyUserIds(userId: string): string[] {
+  const db = getDb();
+  const member = db.prepare(
+    `SELECT family_id FROM family_members WHERE user_id = ? AND status = 'active' LIMIT 1`
+  ).get(userId) as { family_id: string } | undefined;
+  if (!member) return [userId];
+  const members = db.prepare(
+    `SELECT user_id FROM family_members WHERE family_id = ? AND status = 'active'`
+  ).all(member.family_id) as { user_id: string }[];
+  return members.map(m => m.user_id);
+}
 
 export function seedDefaultDishes(userId: string): void {
   const db = getDb();

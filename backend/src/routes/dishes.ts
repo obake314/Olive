@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
-import { getDb, seedDefaultDishes } from '../db/database';
+import { getDb, seedDefaultDishes, getFamilyUserIds } from '../db/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const MAX_IMAGE_BYTES = 200 * 1024; // 200KB
@@ -31,6 +31,8 @@ router.use(authenticate);
 // GET /dishes
 router.get('/', (req: AuthRequest, res: Response) => {
   const db = getDb();
+  const userIds = getFamilyUserIds(req.userId!);
+  const placeholders = userIds.map(() => '?').join(',');
   const dishes = db.prepare(`
     SELECT d.*,
       json_group_array(
@@ -40,10 +42,10 @@ router.get('/', (req: AuthRequest, res: Response) => {
       ) as ingredients_json
     FROM dishes d
     LEFT JOIN ingredients i ON i.dish_id = d.id
-    WHERE d.user_id = ?
+    WHERE d.user_id IN (${placeholders})
     GROUP BY d.id
     ORDER BY d.created_at DESC
-  `).all(req.userId);
+  `).all(...userIds);
 
   const result = dishes.map((d: any) => ({
     ...d,
