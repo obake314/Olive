@@ -11,6 +11,7 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
+COPY src/assets ./assets
 RUN mkdir -p /data
 VOLUME ["/data"]
 ENV PORT=3000
