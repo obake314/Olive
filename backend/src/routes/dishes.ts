@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
-import { getDb } from '../db/database';
+import { getDb, seedDefaultDishes } from '../db/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const MAX_IMAGE_BYTES = 200 * 1024; // 200KB
@@ -52,6 +52,12 @@ router.get('/', (req: AuthRequest, res: Response) => {
   }));
 
   res.json(result);
+});
+
+// POST /dishes/seed-defaults — 定番料理を一括追加
+router.post('/seed-defaults', (req: AuthRequest, res: Response) => {
+  seedDefaultDishes(req.userId!);
+  res.json({ message: '定番料理を追加しました' });
 });
 
 // GET /dishes/:id

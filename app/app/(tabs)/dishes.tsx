@@ -10,7 +10,7 @@ import { Colors } from '../../src/components/Colors';
 import { LoadingView } from '../../src/components/LoadingView';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useDishes } from '../../src/hooks/useDishes';
-import { recipeApi } from '../../src/api/client';
+import { recipeApi, dishesApi } from '../../src/api/client';
 import { Dish } from '../../src/types';
 
 interface IngredientInput {
@@ -65,6 +65,7 @@ export default function DishesScreen() {
   const [ingredients, setIngredients] = useState<IngredientInput[]>([{ ...EMPTY_INGREDIENT }]);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [search, setSearch] = useState('');
 
   useFocusEffect(useCallback(() => { reload(); }, [reload]));
@@ -168,6 +169,18 @@ export default function DishesScreen() {
   const addIngredientRow = () => setIngredients(prev => [...prev, { ...EMPTY_INGREDIENT }]);
   const removeIngredientRow = (idx: number) => setIngredients(prev => prev.filter((_, i) => i !== idx));
 
+  const handleSeedDefaults = async () => {
+    setSeeding(true);
+    try {
+      await dishesApi.seedDefaults();
+      await reload();
+    } catch (e: any) {
+      Alert.alert('エラー', e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const filtered = dishes.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -181,6 +194,9 @@ export default function DishesScreen() {
             onChangeText={setSearch}
             placeholderTextColor={Colors.textSecondary}
           />
+          <TouchableOpacity style={styles.seedBtn} onPress={handleSeedDefaults} disabled={seeding}>
+            <Text style={styles.seedBtnText}>{seeding ? '追加中...' : '定番追加'}</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
             <Text style={styles.addBtnText}>+ 追加</Text>
           </TouchableOpacity>
@@ -378,6 +394,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8, fontSize: 15, color: Colors.text,
     borderWidth: 1, borderColor: Colors.border,
   },
+  seedBtn: { borderWidth: 1, borderColor: Colors.primary, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, justifyContent: 'center' },
+  seedBtnText: { color: Colors.primary, fontWeight: '600', fontSize: 13 },
   addBtn: { backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, justifyContent: 'center' },
   addBtnText: { color: Colors.background, fontWeight: '700', fontSize: 14 },
   listPanel: { flex: 1, minHeight: 0 },

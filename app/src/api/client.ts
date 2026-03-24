@@ -55,6 +55,7 @@ export const dishesApi = {
   update: (id: string, data: Partial<DishInput>) =>
     request<Dish>(`/dishes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/dishes/${id}`, { method: 'DELETE' }),
+  seedDefaults: () => request<{ message: string }>('/dishes/seed-defaults', { method: 'POST' }),
 };
 
 // Recipe Extract
