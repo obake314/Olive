@@ -6,11 +6,14 @@ import {
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
 import { CalendarWeekView } from '../../src/components/CalendarWeekView';
+import { CalendarMonthView } from '../../src/components/CalendarMonthView';
 import { LoadingView } from '../../src/components/LoadingView';
 import { useMealPlans } from '../../src/hooks/useMealPlans';
 import { useDishes } from '../../src/hooks/useDishes';
 import { MealPlan, MealType, MEAL_TYPE_LABELS } from '../../src/types';
 import { MealTypeTag } from '../../src/components/MealTypeTag';
+
+type ViewMode = 'week' | 'month';
 
 function getMondayOfWeek(date: Date): Date {
   const d = new Date(date);
@@ -34,20 +37,31 @@ function addDays(d: Date, days: number): Date {
 export default function CalendarScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+
+  // 週次
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date()));
   const weekEnd = addDays(weekStart, 6);
-  const from = formatDate(weekStart);
-  const to = formatDate(weekEnd);
+
+  // 月次
+  const today = new Date();
+  const [monthYear, setMonthYear] = useState(today.getFullYear());
+  const [monthIndex, setMonthIndex] = useState(today.getMonth());
+
+  // 月次の from/to
+  const monthFrom = `${monthYear}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+  const lastDayOfMonth = new Date(monthYear, monthIndex + 1, 0).getDate();
+  const monthTo = `${monthYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
+
+  const from = viewMode === 'week' ? formatDate(weekStart) : monthFrom;
+  const to = viewMode === 'week' ? formatDate(weekEnd) : monthTo;
 
   const { mealPlans, loading, reload, addMealPlan, removeMealPlan } = useMealPlans(from, to);
   const { dishes } = useDishes();
 
-  // Modal state for adding meal
   const [addModal, setAddModal] = useState<{ date: string; mealType: MealType } | null>(null);
   const [selectedDishId, setSelectedDishId] = useState<string>('');
   const [dishSearch, setDishSearch] = useState('');
-
-  // Modal state for meal detail
   const [detailModal, setDetailModal] = useState<MealPlan | null>(null);
 
   useFocusEffect(useCallback(() => { reload(); }, [reload]));
@@ -68,17 +82,14 @@ export default function CalendarScreen() {
     }
   };
 
-  const handleMealPress = (plan: MealPlan) => {
-    setDetailModal(plan);
-  };
+  const handleMealPress = (plan: MealPlan) => setDetailModal(plan);
 
   const handleDeleteMeal = async () => {
     if (!detailModal) return;
     Alert.alert('削除確認', `「${detailModal.dish_name}」を献立から削除しますか？`, [
       { text: 'キャンセル', style: 'cancel' },
       {
-        text: '削除',
-        style: 'destructive',
+        text: '削除', style: 'destructive',
         onPress: async () => {
           try {
             await removeMealPlan(detailModal.id);
@@ -96,26 +107,58 @@ export default function CalendarScreen() {
   );
 
   const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()} 〜 ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+  const monthLabel = `${monthYear}年${monthIndex + 1}月`;
+
+  const prevPeriod = () => {
+    if (viewMode === 'week') {
+      setWeekStart(prev => addDays(prev, -7));
+    } else {
+      if (monthIndex === 0) { setMonthIndex(11); setMonthYear(y => y - 1); }
+      else setMonthIndex(m => m - 1);
+    }
+  };
+  const nextPeriod = () => {
+    if (viewMode === 'week') {
+      setWeekStart(prev => addDays(prev, 7));
+    } else {
+      if (monthIndex === 11) { setMonthIndex(0); setMonthYear(y => y + 1); }
+      else setMonthIndex(m => m + 1);
+    }
+  };
+  const goToToday = () => {
+    setWeekStart(getMondayOfWeek(new Date()));
+    setMonthYear(today.getFullYear());
+    setMonthIndex(today.getMonth());
+  };
 
   return (
     <View style={styles.container}>
       <View style={[styles.page, isDesktop && styles.pageDesktop]}>
-        <View style={styles.weekNav}>
-          <TouchableOpacity
-            style={styles.navBtn}
-            onPress={() => setWeekStart(prev => addDays(prev, -7))}
-          >
+
+        {/* View mode toggle */}
+        <View style={styles.toolbar}>
+          <View style={styles.modeTabs}>
+            <TouchableOpacity
+              style={[styles.modeTab, viewMode === 'week' && styles.modeTabActive]}
+              onPress={() => setViewMode('week')}
+            >
+              <Text style={[styles.modeTabText, viewMode === 'week' && styles.modeTabTextActive]}>週</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeTab, viewMode === 'month' && styles.modeTabActive]}
+              onPress={() => setViewMode('month')}
+            >
+              <Text style={[styles.modeTabText, viewMode === 'month' && styles.modeTabTextActive]}>月</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.navBtn} onPress={prevPeriod}>
             <Text style={styles.navBtnText}>◀</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setWeekStart(getMondayOfWeek(new Date()))}
-          >
-            <Text style={styles.weekLabel}>{weekLabel}</Text>
+          <TouchableOpacity onPress={goToToday}>
+            <Text style={styles.periodLabel}>{viewMode === 'week' ? weekLabel : monthLabel}</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navBtn}
-            onPress={() => setWeekStart(prev => addDays(prev, 7))}
-          >
+          <TouchableOpacity style={styles.navBtn} onPress={nextPeriod}>
             <Text style={styles.navBtnText}>▶</Text>
           </TouchableOpacity>
         </View>
@@ -123,12 +166,20 @@ export default function CalendarScreen() {
         <View style={styles.calendarPanel}>
           {loading ? (
             <LoadingView />
-          ) : (
+          ) : viewMode === 'week' ? (
             <CalendarWeekView
               weekStart={weekStart}
               mealPlans={mealPlans}
               onDayPress={() => {}}
               onMealPress={handleMealPress}
+              onAddMeal={handleAddMeal}
+            />
+          ) : (
+            <CalendarMonthView
+              year={monthYear}
+              month={monthIndex}
+              mealPlans={mealPlans}
+              onDayPress={(date) => handleAddMeal(date, 'dinner')}
               onAddMeal={handleAddMeal}
             />
           )}
@@ -208,55 +259,52 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   page: { flex: 1, width: '100%', alignSelf: 'center' },
   pageDesktop: { maxWidth: 1280, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
-  weekNav: {
+  toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: Colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 10,
+    gap: 8,
   },
+  modeTabs: {
+    flexDirection: 'row',
+    borderRadius: 6,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginRight: 4,
+  },
+  modeTab: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: Colors.background },
+  modeTabActive: { backgroundColor: Colors.primary },
+  modeTabText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  modeTabTextActive: { color: '#fff' },
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 16, color: Colors.primary, fontWeight: '700' },
-  weekLabel: { fontSize: 15, fontWeight: '600', color: Colors.text },
-  calendarPanel: { flex: 1, minHeight: 0 },
+  periodLabel: { fontSize: 15, fontWeight: '600', color: Colors.text, flex: 1, textAlign: 'center' },
+  calendarPanel: { flex: 1, minHeight: 0, marginTop: 8 },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.surface, padding: 16,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   modalTitle: { fontSize: 15, fontWeight: '600', color: Colors.text },
   modalCancel: { fontSize: 15, color: Colors.textSecondary },
   modalDone: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   disabled: { opacity: 0.4 },
   searchInput: {
-    margin: 12,
-    padding: 12,
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    fontSize: 15,
-    color: Colors.text,
+    margin: 12, padding: 12, backgroundColor: Colors.surface,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
+    fontSize: 15, color: Colors.text,
   },
   dishItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    marginHorizontal: 12,
-    marginBottom: 6,
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
+    marginHorizontal: 12, marginBottom: 6, padding: 14,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
   },
   dishItemSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
   dishItemName: { flex: 1, fontSize: 15, color: Colors.text, fontWeight: '500' },
@@ -265,21 +313,11 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', color: Colors.textSecondary, padding: 32, fontSize: 14 },
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   detailCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 10,
-    padding: 24,
-    width: '80%',
-    maxWidth: 360,
+    backgroundColor: Colors.surface, borderRadius: 10, padding: 24, width: '80%', maxWidth: 360,
   },
   detailTitle: { fontSize: 20, fontWeight: '700', color: Colors.text, marginTop: 8 },
   detailDate: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
   detailUrl: { fontSize: 12, color: Colors.primary, marginTop: 8 },
-  deleteBtn: {
-    marginTop: 20,
-    backgroundColor: Colors.accent,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
+  deleteBtn: { marginTop: 20, backgroundColor: Colors.accent, padding: 12, borderRadius: 8, alignItems: 'center' },
   deleteBtnText: { color: Colors.primaryDark, fontWeight: '600', fontSize: 14 },
 });
