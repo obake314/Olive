@@ -19,11 +19,21 @@ export function getDb(): Database.Database {
 
 function initSchema(): void {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS dishes (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
       name TEXT NOT NULL,
       recipe_url TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS ingredients (
@@ -37,25 +47,33 @@ function initSchema(): void {
 
     CREATE TABLE IF NOT EXISTS meal_plans (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
       date TEXT NOT NULL,
       meal_type TEXT NOT NULL CHECK(meal_type IN ('breakfast','lunch','dinner')),
       dish_id TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (dish_id) REFERENCES dishes(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS shopping_items (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
       week_start TEXT NOT NULL,
       name TEXT NOT NULL,
       quantity REAL NOT NULL DEFAULT 0,
       unit TEXT NOT NULL DEFAULT '',
       checked INTEGER NOT NULL DEFAULT 0,
-      custom INTEGER NOT NULL DEFAULT 0
+      custom INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_dishes_user_id ON dishes(user_id);
     CREATE INDEX IF NOT EXISTS idx_meal_plans_date ON meal_plans(date);
+    CREATE INDEX IF NOT EXISTS idx_meal_plans_user_id ON meal_plans(user_id);
     CREATE INDEX IF NOT EXISTS idx_ingredients_dish_id ON ingredients(dish_id);
     CREATE INDEX IF NOT EXISTS idx_shopping_items_week ON shopping_items(week_start);
+    CREATE INDEX IF NOT EXISTS idx_shopping_items_user_id ON shopping_items(user_id);
   `);
 }

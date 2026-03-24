@@ -3,6 +3,7 @@ import cors from 'cors';
 import dishesRouter from './routes/dishes';
 import mealPlansRouter from './routes/mealPlans';
 import shoppingRouter from './routes/shopping';
+import authRouter from './routes/auth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,7 @@ app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', app: 'Olive' }));
 
+app.use('/auth', authRouter);
 app.use('/dishes', dishesRouter);
 app.use('/meal-plans', mealPlansRouter);
 app.use('/shopping', shoppingRouter);

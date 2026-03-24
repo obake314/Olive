@@ -1,11 +1,13 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../db/database';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
+router.use(authenticate);
 
 // GET /dishes
-router.get('/', (_req: Request, res: Response) => {
+router.get('/', (req: AuthRequest, res: Response) => {
   const db = getDb();
   const dishes = db.prepare(`
     SELECT d.*,
@@ -16,9 +18,10 @@ router.get('/', (_req: Request, res: Response) => {
       ) as ingredients_json
     FROM dishes d
     LEFT JOIN ingredients i ON i.dish_id = d.id
+    WHERE d.user_id = ?
     GROUP BY d.id
     ORDER BY d.created_at DESC
-  `).all();
+  `).all(req.userId);
 
   const result = dishes.map((d: any) => ({
     ...d,
@@ -30,9 +33,9 @@ router.get('/', (_req: Request, res: Response) => {
 });
 
 // GET /dishes/:id
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
-  const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(req.params.id) as any;
+  const dish = db.prepare('SELECT * FROM dishes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId) as any;
   if (!dish) return res.status(404).json({ error: 'Not found' });
 
   const ingredients = db.prepare('SELECT * FROM ingredients WHERE dish_id = ?').all(req.params.id);
@@ -40,13 +43,13 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 // POST /dishes
-router.post('/', (req: Request, res: Response) => {
+router.post('/', (req: AuthRequest, res: Response) => {
   const { name, recipe_url, ingredients = [] } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   const db = getDb();
   const id = uuidv4();
-  db.prepare('INSERT INTO dishes (id, name, recipe_url) VALUES (?, ?, ?)').run(id, name, recipe_url || null);
+  db.prepare('INSERT INTO dishes (id, user_id, name, recipe_url) VALUES (?, ?, ?, ?)').run(id, req.userId, name, recipe_url || null);
 
   const insertIngredient = db.prepare(
     'INSERT INTO ingredients (id, dish_id, name, quantity, unit) VALUES (?, ?, ?, ?, ?)'
@@ -64,9 +67,9 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 // PUT /dishes/:id
-router.put('/:id', (req: Request, res: Response) => {
+router.put('/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
-  const existing = db.prepare('SELECT * FROM dishes WHERE id = ?').get(req.params.id);
+  const existing = db.prepare('SELECT * FROM dishes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
   const { name, recipe_url, ingredients } = req.body;
@@ -95,9 +98,9 @@ router.put('/:id', (req: Request, res: Response) => {
 });
 
 // DELETE /dishes/:id
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
-  const result = db.prepare('DELETE FROM dishes WHERE id = ?').run(req.params.id);
+  const result = db.prepare('DELETE FROM dishes WHERE id = ? AND user_id = ?').run(req.params.id, req.userId);
   if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
   res.status(204).send();
 });

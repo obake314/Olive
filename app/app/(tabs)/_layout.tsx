@@ -1,6 +1,7 @@
-import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { Tabs, router } from 'expo-router';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '../../src/components/Colors';
+import { useAuth } from '../../src/context/AuthContext';
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return (
@@ -11,6 +12,13 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
 }
 
 export default function TabLayout() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/login');
+  };
+
   return (
     <Tabs
       screenOptions={{
@@ -26,6 +34,11 @@ export default function TabLayout() {
         headerStyle: { backgroundColor: Colors.primary },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: '700', fontSize: 18 },
+        headerRight: () => (
+          <TouchableOpacity onPress={handleLogout} style={{ marginRight: 16 }}>
+            <Text style={{ color: '#fff', fontSize: 13 }}>{user?.name} ログアウト</Text>
+          </TouchableOpacity>
+        ),
       }}
     >
       <Tabs.Screen
