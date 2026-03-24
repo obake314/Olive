@@ -7,6 +7,7 @@ router.use(authenticate);
 interface ExtractedRecipe {
   name: string;
   ingredients: { name: string; quantity: number; unit: string }[];
+  recipe_text: string;
 }
 
 // URLからHTMLを取得してレシピ情報を抽出
@@ -77,7 +78,19 @@ async function extractFromUrl(url: string): Promise<ExtractedRecipe> {
     }
   }
 
-  return { name: name || '（料理名未取得）', ingredients: ingredients.slice(0, 30) };
+  // 手順テキスト抽出
+  let recipe_text = '';
+  const stepSelectors = ['.step', '.instruction', '[class*="step"]', '[class*="instruction"]', '[class*="direction"]', 'ol li'];
+  for (const sel of stepSelectors) {
+    const steps: string[] = [];
+    $(sel).each((i, el) => {
+      const t = $(el).text().trim().replace(/\s+/g, ' ');
+      if (t.length > 10) steps.push(`${i + 1}. ${t}`);
+    });
+    if (steps.length > 1) { recipe_text = steps.slice(0, 20).join('\n'); break; }
+  }
+
+  return { name: name || '（料理名未取得）', ingredients: ingredients.slice(0, 30), recipe_text };
 }
 
 // "じゃがいも 2個" → { name: "じゃがいも", quantity: 2, unit: "個" }

@@ -1,7 +1,29 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import sharp from 'sharp';
 import { getDb } from '../db/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
+
+const MAX_IMAGE_BYTES = 200 * 1024; // 200KB
+
+async function compressImage(base64: string): Promise<string> {
+  const matches = base64.match(/^data:(image\/\w+);base64,(.+)$/);
+  if (!matches) throw new Error('Invalid image format');
+  const buffer = Buffer.from(matches[2], 'base64');
+  const compressed = await sharp(buffer)
+    .resize({ width: 800, height: 800, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 75 })
+    .toBuffer();
+  if (compressed.length > MAX_IMAGE_BYTES) {
+    const quality = Math.floor(75 * MAX_IMAGE_BYTES / compressed.length);
+    const recompressed = await sharp(buffer)
+      .resize({ width: 800, height: 800, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: Math.max(quality, 20) })
+      .toBuffer();
+    return `data:image/jpeg;base64,${recompressed.toString('base64')}`;
+  }
+  return `data:image/jpeg;base64,${compressed.toString('base64')}`;
+}
 
 const router = Router();
 router.use(authenticate);
@@ -43,13 +65,21 @@ router.get('/:id', (req: AuthRequest, res: Response) => {
 });
 
 // POST /dishes
-router.post('/', (req: AuthRequest, res: Response) => {
-  const { name, recipe_url, ingredients = [] } = req.body;
+router.post('/', async (req: AuthRequest, res: Response) => {
+  const { name, recipe_url, recipe_text, image_data, ingredients = [] } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
+
+  let processedImage: string | null = null;
+  if (image_data) {
+    try { processedImage = await compressImage(image_data); }
+    catch { processedImage = null; }
+  }
 
   const db = getDb();
   const id = uuidv4();
-  db.prepare('INSERT INTO dishes (id, user_id, name, recipe_url) VALUES (?, ?, ?, ?)').run(id, req.userId, name, recipe_url || null);
+  db.prepare('INSERT INTO dishes (id, user_id, name, recipe_url, recipe_text, image_data) VALUES (?, ?, ?, ?, ?, ?)').run(
+    id, req.userId, name, recipe_url || null, recipe_text || null, processedImage
+  );
 
   const insertIngredient = db.prepare(
     'INSERT INTO ingredients (id, dish_id, name, quantity, unit) VALUES (?, ?, ?, ?, ?)'
@@ -67,15 +97,28 @@ router.post('/', (req: AuthRequest, res: Response) => {
 });
 
 // PUT /dishes/:id
-router.put('/:id', (req: AuthRequest, res: Response) => {
+router.put('/:id', async (req: AuthRequest, res: Response) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM dishes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
-  const { name, recipe_url, ingredients } = req.body;
-  db.prepare('UPDATE dishes SET name = ?, recipe_url = ? WHERE id = ?').run(
+  const { name, recipe_url, recipe_text, image_data, ingredients } = req.body;
+
+  let processedImage = (existing as any).image_data;
+  if (image_data !== undefined) {
+    if (image_data === null) {
+      processedImage = null;
+    } else {
+      try { processedImage = await compressImage(image_data); }
+      catch { processedImage = (existing as any).image_data; }
+    }
+  }
+
+  db.prepare('UPDATE dishes SET name = ?, recipe_url = ?, recipe_text = ?, image_data = ? WHERE id = ?').run(
     name ?? (existing as any).name,
     recipe_url !== undefined ? recipe_url : (existing as any).recipe_url,
+    recipe_text !== undefined ? recipe_text : (existing as any).recipe_text,
+    processedImage,
     req.params.id
   );
 

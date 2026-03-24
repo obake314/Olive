@@ -1,15 +1,17 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  Alert, Modal, TextInput, ScrollView, Linking, useWindowDimensions
+  Alert, Modal, TextInput, ScrollView, Linking, useWindowDimensions, Image, Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
 import { LoadingView } from '../../src/components/LoadingView';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useDishes } from '../../src/hooks/useDishes';
 import { recipeApi } from '../../src/api/client';
-import { Dish, Ingredient } from '../../src/types';
+import { Dish } from '../../src/types';
 
 interface IngredientInput {
   name: string;
@@ -18,6 +20,36 @@ interface IngredientInput {
 }
 
 const EMPTY_INGREDIENT: IngredientInput = { name: '', quantity: '', unit: '' };
+
+async function pickAndCompressImage(): Promise<string | undefined> {
+  if (Platform.OS !== 'web') {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('権限エラー', 'カメラロールへのアクセス権限が必要です');
+      return undefined;
+    }
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: 'images',
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 0.8,
+    base64: Platform.OS === 'web',
+  });
+  if (result.canceled || !result.assets[0]) return undefined;
+  const asset = result.assets[0];
+
+  if (Platform.OS === 'web') {
+    return asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : undefined;
+  }
+
+  const manipulated = await ImageManipulator.manipulateAsync(
+    asset.uri,
+    [{ resize: { width: 800 } }],
+    { compress: 0.75, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+  );
+  return manipulated.base64 ? `data:image/jpeg;base64,${manipulated.base64}` : undefined;
+}
 
 export default function DishesScreen() {
   const { width } = useWindowDimensions();
@@ -28,6 +60,8 @@ export default function DishesScreen() {
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [name, setName] = useState('');
   const [recipeUrl, setRecipeUrl] = useState('');
+  const [recipeText, setRecipeText] = useState('');
+  const [imageData, setImageData] = useState<string | undefined>(undefined);
   const [ingredients, setIngredients] = useState<IngredientInput[]>([{ ...EMPTY_INGREDIENT }]);
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -39,6 +73,8 @@ export default function DishesScreen() {
     setEditingDish(null);
     setName('');
     setRecipeUrl('');
+    setRecipeText('');
+    setImageData(undefined);
     setIngredients([{ ...EMPTY_INGREDIENT }]);
     setModalVisible(true);
   };
@@ -47,12 +83,19 @@ export default function DishesScreen() {
     setEditingDish(dish);
     setName(dish.name);
     setRecipeUrl(dish.recipe_url || '');
+    setRecipeText(dish.recipe_text || '');
+    setImageData(dish.image_data || undefined);
     setIngredients(
       dish.ingredients.length > 0
-        ? dish.ingredients.map(i => ({ name: i.name, quantity: String(i.quantity), unit: i.unit }))
+        ? dish.ingredients.map(i => ({ name: i.name, quantity: String(i.quantity || ''), unit: i.unit }))
         : [{ ...EMPTY_INGREDIENT }]
     );
     setModalVisible(true);
+  };
+
+  const handlePickImage = async () => {
+    const data = await pickAndCompressImage();
+    if (data) setImageData(data ?? undefined);
   };
 
   const handleExtract = async () => {
@@ -68,6 +111,7 @@ export default function DishesScreen() {
           unit: i.unit,
         })));
       }
+      if (result.recipe_text && !recipeText.trim()) setRecipeText(result.recipe_text);
     } catch (e: any) {
       Alert.alert('抽出失敗', e.message);
     } finally {
@@ -83,18 +127,18 @@ export default function DishesScreen() {
         .filter(i => i.name.trim())
         .map(i => ({ name: i.name.trim(), quantity: parseFloat(i.quantity) || 0, unit: i.unit.trim() }));
 
+      const payload = {
+        name: name.trim(),
+        recipe_url: recipeUrl.trim() || undefined,
+        recipe_text: recipeText.trim() || undefined,
+        image_data: imageData,
+        ingredients: ingredientData,
+      };
+
       if (editingDish) {
-        await updateDish(editingDish.id, {
-          name: name.trim(),
-          recipe_url: recipeUrl.trim() || undefined,
-          ingredients: ingredientData,
-        });
+        await updateDish(editingDish.id, payload);
       } else {
-        await createDish({
-          name: name.trim(),
-          recipe_url: recipeUrl.trim() || undefined,
-          ingredients: ingredientData,
-        });
+        await createDish(payload);
       }
       setModalVisible(false);
     } catch (e: any) {
@@ -108,8 +152,7 @@ export default function DishesScreen() {
     Alert.alert('削除確認', `「${dish.name}」を削除しますか？\n紐づく献立も削除されます。`, [
       { text: 'キャンセル', style: 'cancel' },
       {
-        text: '削除',
-        style: 'destructive',
+        text: '削除', style: 'destructive',
         onPress: async () => {
           try { await deleteDish(dish.id); }
           catch (e: any) { Alert.alert('エラー', e.message); }
@@ -123,9 +166,7 @@ export default function DishesScreen() {
   };
 
   const addIngredientRow = () => setIngredients(prev => [...prev, { ...EMPTY_INGREDIENT }]);
-  const removeIngredientRow = (idx: number) => {
-    setIngredients(prev => prev.filter((_, i) => i !== idx));
-  };
+  const removeIngredientRow = (idx: number) => setIngredients(prev => prev.filter((_, i) => i !== idx));
 
   const filtered = dishes.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -159,43 +200,40 @@ export default function DishesScreen() {
               key={isWideDesktop ? '3-col' : isDesktop ? '2-col' : '1-col'}
               columnWrapperStyle={isDesktop ? styles.columnWrap : undefined}
               renderItem={({ item }) => (
-                <View
-                  style={[
-                    styles.cardWrap,
-                    isDesktop && styles.cardWrapDesktop,
-                    isWideDesktop && styles.cardWrapWide,
-                  ]}
-                >
+                <View style={[styles.cardWrap, isDesktop && styles.cardWrapDesktop, isWideDesktop && styles.cardWrapWide]}>
                   <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardName}>{item.name}</Text>
-                      <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                        <Text style={styles.deleteIcon}>削除</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {item.ingredients.length > 0 && (
-                      <View style={styles.ingredientList}>
-                        {item.ingredients.slice(0, 4).map((ing) => (
-                          <View key={ing.id} style={styles.ingredientChip}>
-                            <Text style={styles.ingredientText}>
-                              {ing.name}{ing.quantity > 0 ? ` ${ing.quantity}${ing.unit}` : ''}
-                            </Text>
-                          </View>
-                        ))}
-                        {item.ingredients.length > 4 && (
-                          <View style={styles.ingredientChip}>
-                            <Text style={styles.ingredientText}>+{item.ingredients.length - 4}</Text>
-                          </View>
-                        )}
-                      </View>
-                    )}
-
-                    {item.recipe_url ? (
-                      <TouchableOpacity onPress={() => Linking.openURL(item.recipe_url!)}>
-                        <Text style={styles.recipeUrl} numberOfLines={1}>{item.recipe_url}</Text>
-                      </TouchableOpacity>
+                    {item.image_data ? (
+                      <Image source={{ uri: item.image_data }} style={styles.cardImage} resizeMode="cover" />
                     ) : null}
+                    <View style={styles.cardBody}>
+                      <View style={styles.cardHeader}>
+                        <Text style={styles.cardName}>{item.name}</Text>
+                        <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                          <Text style={styles.deleteIcon}>削除</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {item.ingredients.length > 0 && (
+                        <View style={styles.ingredientList}>
+                          {item.ingredients.slice(0, 4).map((ing) => (
+                            <View key={ing.id} style={styles.ingredientChip}>
+                              <Text style={styles.ingredientText}>
+                                {ing.name}{ing.quantity > 0 ? ` ${ing.quantity}${ing.unit}` : ''}
+                              </Text>
+                            </View>
+                          ))}
+                          {item.ingredients.length > 4 && (
+                            <View style={styles.ingredientChip}>
+                              <Text style={styles.ingredientText}>+{item.ingredients.length - 4}</Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+                      {item.recipe_url ? (
+                        <TouchableOpacity onPress={() => Linking.openURL(item.recipe_url!)}>
+                          <Text style={styles.recipeUrl} numberOfLines={1}>{item.recipe_url}</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
                   </TouchableOpacity>
                 </View>
               )}
@@ -204,7 +242,6 @@ export default function DishesScreen() {
         </View>
       </View>
 
-      {/* Add/Edit Modal */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
@@ -220,6 +257,23 @@ export default function DishesScreen() {
           </View>
 
           <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+
+            {/* 画像 */}
+            <Text style={styles.label}>料理の画像</Text>
+            <TouchableOpacity style={styles.imagePicker} onPress={handlePickImage}>
+              {imageData ? (
+                <Image source={{ uri: imageData }} style={styles.imagePreview} resizeMode="cover" />
+              ) : (
+                <Text style={styles.imagePickerText}>タップして画像を選択</Text>
+              )}
+            </TouchableOpacity>
+            {imageData && (
+              <TouchableOpacity onPress={() => setImageData(undefined)}>
+                <Text style={styles.removeImageText}>画像を削除</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* 料理名 */}
             <Text style={styles.label}>料理名 *</Text>
             <TextInput
               style={styles.input}
@@ -229,6 +283,7 @@ export default function DishesScreen() {
               placeholderTextColor={Colors.textSecondary}
             />
 
+            {/* レシピURL */}
             <Text style={styles.label}>レシピURL</Text>
             <TextInput
               style={styles.input}
@@ -245,17 +300,17 @@ export default function DishesScreen() {
               disabled={extracting}
             >
               <Text style={styles.extractBtnText}>
-                {extracting ? '抽出中...' : '↓ URLから料理名・材料を抽出'}
+                {extracting ? '抽出中...' : '↓ URLから料理名・材料・手順を抽出'}
               </Text>
             </TouchableOpacity>
 
+            {/* 材料 */}
             <View style={styles.sectionHeader}>
               <Text style={styles.label}>材料</Text>
               <TouchableOpacity onPress={addIngredientRow} style={styles.addIngredientBtn}>
                 <Text style={styles.addIngredientBtnText}>+ 追加</Text>
               </TouchableOpacity>
             </View>
-
             {ingredients.map((ing, idx) => (
               <View key={idx} style={styles.ingredientRow}>
                 <TextInput
@@ -287,6 +342,20 @@ export default function DishesScreen() {
                 )}
               </View>
             ))}
+
+            {/* 作り方 */}
+            <Text style={styles.label}>作り方・メモ</Text>
+            <TextInput
+              style={[styles.input, styles.recipeTextInput]}
+              value={recipeText}
+              onChangeText={setRecipeText}
+              placeholder="手順やメモを入力..."
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+              placeholderTextColor={Colors.textSecondary}
+            />
+
             <View style={{ height: 40 }} />
           </ScrollView>
         </View>
@@ -300,33 +369,16 @@ const styles = StyleSheet.create({
   page: { flex: 1, width: '100%' },
   pageDesktop: { maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
   searchBar: {
-    flexDirection: 'row',
-    padding: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    gap: 8,
+    flexDirection: 'row', padding: 12, backgroundColor: Colors.surface,
+    borderWidth: 1, borderColor: Colors.border, borderRadius: 10, gap: 8,
   },
   searchBarDesktop: { padding: 16, gap: 12 },
   searchInput: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 15,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    flex: 1, backgroundColor: Colors.background, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 8, fontSize: 15, color: Colors.text,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  addBtn: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    justifyContent: 'center',
-  },
+  addBtn: { backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, justifyContent: 'center' },
   addBtnText: { color: Colors.background, fontWeight: '700', fontSize: 14 },
   listPanel: { flex: 1, minHeight: 0 },
   list: { paddingVertical: 12 },
@@ -335,41 +387,27 @@ const styles = StyleSheet.create({
   cardWrapDesktop: { flex: 1 },
   cardWrapWide: { flex: 1 },
   card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    minHeight: 150,
+    backgroundColor: Colors.surface, borderRadius: 8, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4,
+    elevation: 2, borderWidth: 1, borderColor: Colors.border, minHeight: 120,
   },
+  cardImage: { width: '100%', height: 140 },
+  cardBody: { padding: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardName: { fontSize: 16, fontWeight: '700', color: Colors.text, flex: 1 },
   deleteIcon: { fontSize: 13, color: Colors.primaryDark, fontWeight: '700' },
   ingredientList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 8 },
   ingredientChip: {
-    backgroundColor: Colors.background,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: Colors.background, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
   },
   ingredientText: { fontSize: 12, color: Colors.textSecondary },
   recipeUrl: { fontSize: 12, color: Colors.primary, marginTop: 8 },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.surface, padding: 16,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   modalTitle: { fontSize: 15, fontWeight: '600', color: Colors.text },
   modalCancel: { fontSize: 15, color: Colors.textSecondary },
@@ -377,15 +415,22 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.4 },
   modalBody: { padding: 16 },
   label: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, marginBottom: 6, marginTop: 16 },
-  input: {
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 12,
-    fontSize: 15,
-    color: Colors.text,
+  imagePicker: {
+    height: 160, borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
+  imagePreview: { width: '100%', height: '100%' },
+  imagePickerText: { fontSize: 14, color: Colors.textSecondary },
+  removeImageText: { fontSize: 13, color: Colors.error, marginTop: 6, textAlign: 'center' },
+  input: {
+    backgroundColor: Colors.surface, borderRadius: 8,
+    borderWidth: 1, borderColor: Colors.border, padding: 12, fontSize: 15, color: Colors.text,
+  },
+  extractBtn: {
+    marginTop: 8, paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 8, borderWidth: 1, borderColor: Colors.primary, alignItems: 'center',
+  },
+  extractBtnText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
   addIngredientBtn: { padding: 4 },
   addIngredientBtnText: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
@@ -395,14 +440,5 @@ const styles = StyleSheet.create({
   ingredientUnit: { flex: 1.5, margin: 0 },
   removeBtn: { padding: 8 },
   removeBtnText: { color: Colors.error, fontSize: 14, fontWeight: '600' },
-  extractBtn: {
-    marginTop: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    alignItems: 'center',
-  },
-  extractBtnText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
+  recipeTextInput: { minHeight: 120, lineHeight: 22 },
 });

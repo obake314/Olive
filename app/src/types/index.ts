@@ -12,6 +12,8 @@ export interface Dish {
   id: string;
   name: string;
   recipe_url?: string;
+  recipe_text?: string;
+  image_data?: string;
   created_at: string;
   ingredients: Ingredient[];
 }

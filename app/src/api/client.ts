@@ -59,7 +59,7 @@ export const dishesApi = {
 // Recipe Extract
 export const recipeApi = {
   extract: (url: string) =>
-    request<{ name: string; ingredients: { name: string; quantity: number; unit: string }[] }>(
+    request<{ name: string; recipe_text: string; ingredients: { name: string; quantity: number; unit: string }[] }>(
       '/recipes/extract',
       { method: 'POST', body: JSON.stringify({ url }) }
     ),
