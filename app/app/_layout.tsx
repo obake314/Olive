@@ -11,7 +11,7 @@ function RootLayoutNav() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace('/login');
+      router.replace('/');
     } else {
       router.replace('/(tabs)');
     }
@@ -29,11 +29,9 @@ function RootLayoutNav() {
     <>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="dishes/[id]" options={{ headerShown: true, title: '料理詳細' }} />
-        <Stack.Screen name="dishes/new" options={{ headerShown: true, title: '料理を追加' }} />
-        <Stack.Screen name="meal-plan/add" options={{ headerShown: true, title: '献立を追加' }} />
       </Stack>
     </>
   );
