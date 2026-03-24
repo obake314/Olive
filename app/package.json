@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
-    "@react-navigation/native": "^6.1.9",
     "expo": "~52.0.0",
     "expo-linking": "~7.0.0",
     "expo-router": "~4.0.0",
