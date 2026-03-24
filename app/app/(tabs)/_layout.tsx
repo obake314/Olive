@@ -70,7 +70,7 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  iconContainer: { padding: 4, borderRadius: 8 },
+  iconContainer: { padding: 4, borderRadius: 4 },
   iconFocused: { backgroundColor: Colors.primaryLight },
   iconLabel: { fontSize: 15, fontWeight: '700', color: Colors.textSecondary },
   iconLabelFocused: { color: Colors.primaryDark },

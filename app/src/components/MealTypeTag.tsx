@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 12,
+    borderRadius: 6,
     alignSelf: 'flex-start',
   },
   text: { fontSize: 12, fontWeight: '600' },

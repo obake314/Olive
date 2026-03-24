@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   marker: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: 14,
     marginBottom: 16,
     backgroundColor: Colors.primaryLight,
     borderWidth: 1,
