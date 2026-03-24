@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, Alert, ScrollView,
+  KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { Colors } from '../src/components/Colors';
@@ -12,10 +12,12 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async () => {
+    setErrorMsg('');
     if (!email || !password) {
-      Alert.alert('入力エラー', 'メールアドレスとパスワードを入力してください');
+      setErrorMsg('メールアドレスとパスワードを入力してください');
       return;
     }
     setLoading(true);
@@ -26,18 +28,19 @@ export default function LoginScreen() {
         await register(email, password);
       }
     } catch (e: any) {
-      Alert.alert('エラー', e.message);
+      setErrorMsg(e.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDemo = async () => {
+    setErrorMsg('');
     setLoading(true);
     try {
       await login('demo@olive.app', 'demo1234');
     } catch (e: any) {
-      Alert.alert('エラー', e.message);
+      setErrorMsg(e.message);
     } finally {
       setLoading(false);
     }
@@ -67,6 +70,8 @@ export default function LoginScreen() {
               <Text style={[styles.tabText, mode === 'register' && styles.tabTextActive]}>新規登録</Text>
             </TouchableOpacity>
           </View>
+
+          {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
           <TextInput
             style={styles.input}
@@ -155,6 +160,7 @@ const styles = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { marginHorizontal: 12, fontSize: 12, color: Colors.textSecondary },
+  errorText: { color: '#e53e3e', fontSize: 13, marginBottom: 12, textAlign: 'center' },
   demoBtn: {
     borderWidth: 1.5,
     borderColor: Colors.primary,
