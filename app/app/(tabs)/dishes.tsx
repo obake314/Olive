@@ -8,6 +8,7 @@ import { Colors } from '../../src/components/Colors';
 import { LoadingView } from '../../src/components/LoadingView';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useDishes } from '../../src/hooks/useDishes';
+import { recipeApi } from '../../src/api/client';
 import { Dish, Ingredient } from '../../src/types';
 
 interface IngredientInput {
@@ -29,6 +30,7 @@ export default function DishesScreen() {
   const [recipeUrl, setRecipeUrl] = useState('');
   const [ingredients, setIngredients] = useState<IngredientInput[]>([{ ...EMPTY_INGREDIENT }]);
   const [saving, setSaving] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [search, setSearch] = useState('');
 
   useFocusEffect(useCallback(() => { reload(); }, [reload]));
@@ -51,6 +53,26 @@ export default function DishesScreen() {
         : [{ ...EMPTY_INGREDIENT }]
     );
     setModalVisible(true);
+  };
+
+  const handleExtract = async () => {
+    if (!recipeUrl.trim()) { Alert.alert('エラー', 'レシピURLを入力してください'); return; }
+    setExtracting(true);
+    try {
+      const result = await recipeApi.extract(recipeUrl.trim());
+      if (result.name && !name.trim()) setName(result.name);
+      if (result.ingredients.length > 0) {
+        setIngredients(result.ingredients.map(i => ({
+          name: i.name,
+          quantity: i.quantity > 0 ? String(i.quantity) : '',
+          unit: i.unit,
+        })));
+      }
+    } catch (e: any) {
+      Alert.alert('抽出失敗', e.message);
+    } finally {
+      setExtracting(false);
+    }
   };
 
   const handleSave = async () => {
@@ -217,6 +239,15 @@ export default function DishesScreen() {
               autoCapitalize="none"
               placeholderTextColor={Colors.textSecondary}
             />
+            <TouchableOpacity
+              style={[styles.extractBtn, extracting && styles.disabled]}
+              onPress={handleExtract}
+              disabled={extracting}
+            >
+              <Text style={styles.extractBtnText}>
+                {extracting ? '抽出中...' : '↓ URLから料理名・材料を抽出'}
+              </Text>
+            </TouchableOpacity>
 
             <View style={styles.sectionHeader}>
               <Text style={styles.label}>材料</Text>
@@ -364,4 +395,14 @@ const styles = StyleSheet.create({
   ingredientUnit: { flex: 1.5, margin: 0 },
   removeBtn: { padding: 8 },
   removeBtnText: { color: Colors.error, fontSize: 14, fontWeight: '600' },
+  extractBtn: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+  },
+  extractBtnText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
 });

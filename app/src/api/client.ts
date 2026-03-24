@@ -56,6 +56,15 @@ export const dishesApi = {
   delete: (id: string) => request<void>(`/dishes/${id}`, { method: 'DELETE' }),
 };
 
+// Recipe Extract
+export const recipeApi = {
+  extract: (url: string) =>
+    request<{ name: string; ingredients: { name: string; quantity: number; unit: string }[] }>(
+      '/recipes/extract',
+      { method: 'POST', body: JSON.stringify({ url }) }
+    ),
+};
+
 // Meal Plans
 export const mealPlansApi = {
   list: (params: { from?: string; to?: string; date?: string }) => {

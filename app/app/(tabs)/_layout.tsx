@@ -46,7 +46,7 @@ export default function TabLayout() {
         options={{
           title: 'カレンダー',
           tabBarIcon: ({ focused }) => <TabIcon label="週" focused={focused} />,
-          headerTitle: '献立カレンダー',
+          headerTitle: 'Olive 献立カレンダー',
         }}
       />
       <Tabs.Screen
@@ -54,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: '料理マスタ',
           tabBarIcon: ({ focused }) => <TabIcon label="料" focused={focused} />,
-          headerTitle: '料理マスタ',
+          headerTitle: 'Olive 料理マスタ',
         }}
       />
       <Tabs.Screen
@@ -62,7 +62,7 @@ export default function TabLayout() {
         options={{
           title: '買い物リスト',
           tabBarIcon: ({ focused }) => <TabIcon label="買" focused={focused} />,
-          headerTitle: '買い物リスト',
+          headerTitle: 'Olive 買い物リスト',
         }}
       />
     </Tabs>
