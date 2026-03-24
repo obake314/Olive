@@ -15,9 +15,11 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSubmit = async () => {
     setErrorMsg('');
+    setSuccessMsg('');
     if (!email || !password) {
       setErrorMsg('メールアドレスとパスワードを入力してください');
       return;
@@ -27,7 +29,10 @@ export default function LoginScreen() {
       if (mode === 'login') {
         await login(email, password);
       } else {
-        await register(email, password);
+        const res = await register(email, password);
+        setSuccessMsg(res.message);
+        setMode('login');
+        setPassword('');
       }
     } catch (e: any) {
       setErrorMsg(e.message);
@@ -82,6 +87,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
+            {successMsg ? <Text style={styles.successText}>{successMsg}</Text> : null}
             {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
             <TextInput
@@ -190,6 +196,7 @@ const styles = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { marginHorizontal: 12, fontSize: 12, color: Colors.textSecondary },
+  successText: { color: '#2d7a4a', fontSize: 13, marginBottom: 12, textAlign: 'center', backgroundColor: '#e6f4ea', padding: 10, borderRadius: 6 },
   errorText: { color: Colors.primaryDark, fontSize: 13, marginBottom: 12, textAlign: 'center' },
   demoBtn: {
     borderWidth: 1.5,

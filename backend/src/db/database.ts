@@ -26,7 +26,15 @@ function initSchema(): void {
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       name TEXT NOT NULL,
+      email_verified INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS dishes (
@@ -96,6 +104,9 @@ function initSchema(): void {
   // マイグレーション: 既存テーブルにカラム追加
   try { db.exec(`ALTER TABLE dishes ADD COLUMN recipe_text TEXT`); } catch {}
   try { db.exec(`ALTER TABLE dishes ADD COLUMN image_data TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`); } catch {}
+  // デモアカウントは認証済みにする
+  db.exec(`UPDATE users SET email_verified = 1 WHERE email = 'demo@olive.app'`);
 
   seedDemoAccount();
   seedDishes();
