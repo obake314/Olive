@@ -1,4 +1,4 @@
-import { Dish, MealPlan, MealType, ShoppingItem } from '../types';
+import { Dish, Ingredient, MealPlan, MealType, ShoppingItem } from '../types';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || '/api';
 
@@ -41,12 +41,17 @@ export const authApi = {
 };
 
 // Dishes
+type DishIngredientInput = Omit<Ingredient, 'id' | 'dish_id'>;
+type DishInput = Omit<Dish, 'id' | 'created_at' | 'ingredients'> & {
+  ingredients: DishIngredientInput[];
+};
+
 export const dishesApi = {
   list: () => request<Dish[]>('/dishes'),
   get: (id: string) => request<Dish>(`/dishes/${id}`),
-  create: (data: Omit<Dish, 'id' | 'created_at'>) =>
+  create: (data: DishInput) =>
     request<Dish>('/dishes', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Partial<Omit<Dish, 'id' | 'created_at'>>) =>
+  update: (id: string, data: Partial<DishInput>) =>
     request<Dish>(`/dishes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/dishes/${id}`, { method: 'DELETE' }),
 };

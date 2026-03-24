@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Dish } from '../types';
+import { Dish, Ingredient } from '../types';
 import { dishesApi } from '../api/client';
+
+type DishIngredientInput = Omit<Ingredient, 'id' | 'dish_id'>;
+type CreateDishInput = Omit<Dish, 'id' | 'created_at' | 'ingredients'> & {
+  ingredients: DishIngredientInput[];
+};
+type UpdateDishInput = Partial<CreateDishInput>;
 
 export function useDishes() {
   const [dishes, setDishes] = useState<Dish[]>([]);
@@ -22,13 +28,13 @@ export function useDishes() {
 
   useEffect(() => { load(); }, [load]);
 
-  const createDish = async (data: Omit<Dish, 'id' | 'created_at'>) => {
+  const createDish = async (data: CreateDishInput) => {
     const dish = await dishesApi.create(data);
     setDishes(prev => [dish, ...prev]);
     return dish;
   };
 
-  const updateDish = async (id: string, data: Partial<Omit<Dish, 'id' | 'created_at'>>) => {
+  const updateDish = async (id: string, data: UpdateDishInput) => {
     const dish = await dishesApi.update(id, data);
     setDishes(prev => prev.map(d => d.id === id ? dish : d));
     return dish;

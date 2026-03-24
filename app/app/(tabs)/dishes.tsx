@@ -122,7 +122,7 @@ export default function DishesScreen() {
       {loading ? (
         <LoadingView />
       ) : filtered.length === 0 ? (
-        <EmptyState icon="🍳" title="料理がありません" subtitle="「+ 追加」ボタンから料理を登録しましょう" />
+        <EmptyState title="料理がありません" subtitle="「+ 追加」ボタンから料理を登録しましょう" />
       ) : (
         <FlatList
           data={filtered}
@@ -133,7 +133,7 @@ export default function DishesScreen() {
               <View style={styles.cardHeader}>
                 <Text style={styles.cardName}>{item.name}</Text>
                 <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                  <Text style={styles.deleteIcon}>🗑</Text>
+                  <Text style={styles.deleteIcon}>削除</Text>
                 </TouchableOpacity>
               </View>
 
@@ -156,7 +156,7 @@ export default function DishesScreen() {
 
               {item.recipe_url ? (
                 <TouchableOpacity onPress={() => Linking.openURL(item.recipe_url!)}>
-                  <Text style={styles.recipeUrl} numberOfLines={1}>🔗 {item.recipe_url}</Text>
+                  <Text style={styles.recipeUrl} numberOfLines={1}>{item.recipe_url}</Text>
                 </TouchableOpacity>
               ) : null}
             </TouchableOpacity>
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
   },
-  addBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  addBtnText: { color: Colors.background, fontWeight: '700', fontSize: 14 },
   list: { padding: 12, gap: 8 },
   card: {
     backgroundColor: Colors.surface,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardName: { fontSize: 16, fontWeight: '700', color: Colors.text, flex: 1 },
-  deleteIcon: { fontSize: 16 },
+  deleteIcon: { fontSize: 13, color: Colors.primaryDark, fontWeight: '700' },
   ingredientList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 8 },
   ingredientChip: {
     backgroundColor: Colors.background,

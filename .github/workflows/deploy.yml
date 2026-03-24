@@ -119,5 +119,5 @@ jobs:
             cd /var/www/app/olive
             docker compose ps
             # ヘルスチェック (backend に直接確認)
-            curl -sf http://localhost:3000/health || (echo "❌ Health check failed" && exit 1)
+            curl -sf http://localhost:3001/health || (echo "❌ Health check failed" && exit 1)
             echo "✅ Health check passed"

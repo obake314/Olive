@@ -162,7 +162,7 @@ export default function CalendarScreen() {
                 onPress={() => setSelectedDishId(item.id)}
               >
                 <Text style={styles.dishItemName}>{item.name}</Text>
-                {item.recipe_url && <Text style={styles.dishItemUrl}>🔗 レシピあり</Text>}
+                {item.recipe_url && <Text style={styles.dishItemUrl}>レシピあり</Text>}
                 {selectedDishId === item.id && <Text style={styles.checkmark}>✓</Text>}
               </TouchableOpacity>
             )}
@@ -267,10 +267,10 @@ const styles = StyleSheet.create({
   detailUrl: { fontSize: 12, color: Colors.primary, marginTop: 8 },
   deleteBtn: {
     marginTop: 20,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: Colors.accent,
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
-  deleteBtnText: { color: Colors.error, fontWeight: '600', fontSize: 14 },
+  deleteBtnText: { color: Colors.primaryDark, fontWeight: '600', fontSize: 14 },
 });

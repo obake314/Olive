@@ -99,15 +99,15 @@ export default function ShoppingScreen() {
 
   const renderItem = ({ item }: { item: ShoppingItem }) => (
     <TouchableOpacity
-      style={[styles.item, item.checked && styles.itemChecked]}
+      style={[styles.item, !!item.checked && styles.itemChecked]}
       onPress={() => toggleCheck(item.id)}
       onLongPress={() => handleDelete(item)}
     >
-      <View style={[styles.checkbox, item.checked && styles.checkboxChecked]}>
+      <View style={[styles.checkbox, !!item.checked && styles.checkboxChecked]}>
         {item.checked ? <Text style={styles.checkboxMark}>✓</Text> : null}
       </View>
       <View style={styles.itemContent}>
-        <Text style={[styles.itemName, item.checked && styles.itemNameChecked]}>
+        <Text style={[styles.itemName, !!item.checked && styles.itemNameChecked]}>
           {item.name}
         </Text>
         {(item.quantity > 0 || item.unit) && (
@@ -140,7 +140,7 @@ export default function ShoppingScreen() {
       {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.generateBtn} onPress={handleGenerate}>
-          <Text style={styles.generateBtnText}>🔄 献立から生成</Text>
+          <Text style={styles.generateBtnText}>献立から生成</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.customAddBtn} onPress={() => setAddModal(true)}>
           <Text style={styles.customAddBtnText}>+ カスタム追加</Text>
@@ -151,7 +151,6 @@ export default function ShoppingScreen() {
         <LoadingView />
       ) : items.length === 0 ? (
         <EmptyState
-          icon="🛒"
           title="買い物リストが空です"
           subtitle="「献立から生成」を押すか、手動でアイテムを追加してください"
         />
@@ -249,7 +248,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  generateBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  generateBtnText: { color: Colors.background, fontWeight: '700', fontSize: 14 },
   customAddBtn: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -288,7 +287,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  checkboxMark: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  checkboxMark: { color: Colors.background, fontSize: 14, fontWeight: '700' },
   itemContent: { flex: 1 },
   itemName: { fontSize: 15, color: Colors.text, fontWeight: '500' },
   itemNameChecked: { textDecorationLine: 'line-through', color: Colors.textSecondary },
@@ -340,6 +339,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.primary,
   },
-  modalSaveText: { color: '#fff', fontWeight: '700' },
+  modalSaveText: { color: Colors.background, fontWeight: '700' },
   disabled: { opacity: 0.4 },
 });

@@ -11,6 +11,8 @@ services:
       - olive-data:/data
     networks:
       - olive-net
+    ports:
+      - "3001:3000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 30s

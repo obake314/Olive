@@ -3,10 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '../../src/components/Colors';
 import { useAuth } from '../../src/context/AuthContext';
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
     <View style={[styles.iconContainer, focused && styles.iconFocused]}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <Text style={[styles.iconLabel, focused && styles.iconLabelFocused]}>{label}</Text>
     </View>
   );
 }
@@ -32,11 +32,11 @@ export default function TabLayout() {
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         headerStyle: { backgroundColor: Colors.primary },
-        headerTintColor: '#fff',
+        headerTintColor: Colors.background,
         headerTitleStyle: { fontWeight: '700', fontSize: 18 },
         headerRight: () => (
           <TouchableOpacity onPress={handleLogout} style={{ marginRight: 16 }}>
-            <Text style={{ color: '#fff', fontSize: 13 }}>{user?.name} ログアウト</Text>
+            <Text style={{ color: Colors.background, fontSize: 13 }}>{user?.name} ログアウト</Text>
           </TouchableOpacity>
         ),
       }}
@@ -45,7 +45,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'カレンダー',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="週" focused={focused} />,
           headerTitle: '献立カレンダー',
         }}
       />
@@ -53,7 +53,7 @@ export default function TabLayout() {
         name="dishes"
         options={{
           title: '料理マスタ',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🍳" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="料" focused={focused} />,
           headerTitle: '料理マスタ',
         }}
       />
@@ -61,7 +61,7 @@ export default function TabLayout() {
         name="shopping"
         options={{
           title: '買い物リスト',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🛒" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="買" focused={focused} />,
           headerTitle: '買い物リスト',
         }}
       />
@@ -72,5 +72,6 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   iconContainer: { padding: 4, borderRadius: 8 },
   iconFocused: { backgroundColor: Colors.primaryLight },
-  emoji: { fontSize: 22 },
+  iconLabel: { fontSize: 15, fontWeight: '700', color: Colors.textSecondary },
+  iconLabelFocused: { color: Colors.primaryDark },
 });
