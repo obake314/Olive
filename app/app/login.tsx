@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     backgroundColor: Colors.accent,
-    borderRadius: 20,
+    borderRadius: 12,
     padding: 24,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   brandCardText: { fontSize: 15, lineHeight: 24, color: Colors.primaryDark },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 10,
     padding: 24,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     maxWidth: 520,
   },
   cardDesktop: { padding: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 6 },
-  tabs: { flexDirection: 'row', marginBottom: 20, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
+  tabs: { flexDirection: 'row', marginBottom: 20, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: Colors.background },
   tabActive: { backgroundColor: Colors.primary },
   tabText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 14,
     fontSize: 15,
     color: Colors.text,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     backgroundColor: Colors.primary,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 16,
     alignItems: 'center',
     marginTop: 4,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   demoBtn: {
     borderWidth: 1.5,
     borderColor: Colors.primary,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 16,
     alignItems: 'center',
     backgroundColor: Colors.background,
