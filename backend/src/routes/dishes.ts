@@ -57,8 +57,8 @@ router.get('/', (req: AuthRequest, res: Response) => {
 });
 
 // POST /dishes/seed-defaults — 定番料理を一括追加
-router.post('/seed-defaults', (req: AuthRequest, res: Response) => {
-  seedDefaultDishes(req.userId!);
+router.post('/seed-defaults', async (req: AuthRequest, res: Response) => {
+  await seedDefaultDishes(req.userId!);
   res.json({ message: '定番料理を追加しました' });
 });
 

@@ -46,7 +46,7 @@ router.post('/register', async (req: Request, res: Response) => {
   const id = uuidv4();
   const name = email.split('@')[0];
   db.prepare('INSERT INTO users (id, email, password_hash, name) VALUES (?, ?, ?, ?)').run(id, email, password_hash, name);
-  seedDefaultDishes(id);
+  await seedDefaultDishes(id);
 
   // 認証トークン発行
   const token = uuidv4();

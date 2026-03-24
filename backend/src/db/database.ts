@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs';
+import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 
 // Docker イメージ内では /app/assets/images/、ローカルでは src/../assets/images/
@@ -369,14 +370,32 @@ export function getFamilyUserIds(userId: string): string[] {
   return members.map(m => m.user_id);
 }
 
-export function seedDefaultDishes(userId: string): void {
+async function compressImageForSeed(base64: string): Promise<string> {
+  const matches = base64.match(/^data:(image\/\w+);base64,(.+)$/);
+  if (!matches) return base64;
+  const buffer = Buffer.from(matches[2], 'base64');
+  const compressed = await sharp(buffer)
+    .resize({ width: 600, height: 600, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 70 })
+    .toBuffer();
+  return `data:image/jpeg;base64,${compressed.toString('base64')}`;
+}
+
+export async function seedDefaultDishes(userId: string): Promise<void> {
   const db = getDb();
   const checkStmt = db.prepare('SELECT id FROM dishes WHERE user_id = ? AND name = ?');
   const insertDish = db.prepare('INSERT INTO dishes (id, user_id, name, recipe_text, image_data) VALUES (?, ?, ?, ?, ?)');
   const insertIngredient = db.prepare('INSERT INTO ingredients (id, dish_id, name, quantity, unit) VALUES (?, ?, ?, ?, ?)');
 
   for (const dish of DEFAULT_DISHES) {
-    const imageData = dish.image_file ? loadImageBase64(dish.image_file) : null;
+    let imageData: string | null = null;
+    if (dish.image_file) {
+      const raw = loadImageBase64(dish.image_file);
+      if (raw) {
+        try { imageData = await compressImageForSeed(raw); }
+        catch { imageData = raw; }
+      }
+    }
     const existing = checkStmt.get(userId, dish.name) as { id: string } | undefined;
     const dishId = existing?.id ?? uuidv4();
     if (!existing) {
@@ -394,5 +413,5 @@ export function seedDefaultDishes(userId: string): void {
 function seedDishes(): void {
   const user = db.prepare("SELECT id FROM users WHERE email = 'demo@olive.app'").get() as { id: string } | undefined;
   if (!user) return;
-  seedDefaultDishes(user.id);
+  seedDefaultDishes(user.id).catch(() => {});
 }
