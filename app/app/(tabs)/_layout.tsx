@@ -65,6 +65,14 @@ export default function TabLayout() {
           headerTitle: 'Olive 買い物リスト',
         }}
       />
+      <Tabs.Screen
+        name="todo"
+        options={{
+          title: 'TODO',
+          tabBarIcon: ({ focused }) => <TabIcon label="TO" focused={focused} />,
+          headerTitle: 'Olive TODO',
+        }}
+      />
     </Tabs>
   );
 }

@@ -106,7 +106,9 @@ export default function CalendarScreen() {
     d.name.toLowerCase().includes(dishSearch.toLowerCase())
   );
 
-  const weekLabel = `${weekStart.getMonth() + 1}/${weekStart.getDate()} 〜 ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+  const weekLabel = weekStart.getFullYear() === weekEnd.getFullYear()
+    ? `${weekStart.getFullYear()}年 ${weekStart.getMonth() + 1}/${weekStart.getDate()} 〜 ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`
+    : `${weekStart.getFullYear()}/${weekStart.getMonth() + 1}/${weekStart.getDate()} 〜 ${weekEnd.getFullYear()}/${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
   const monthLabel = `${monthYear}年${monthIndex + 1}月`;
 
   const prevPeriod = () => {

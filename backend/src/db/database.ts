@@ -78,7 +78,20 @@ function initSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_meal_plans_user_id ON meal_plans(user_id);
     CREATE INDEX IF NOT EXISTS idx_ingredients_dish_id ON ingredients(dish_id);
     CREATE INDEX IF NOT EXISTS idx_shopping_items_week ON shopping_items(week_start);
+    CREATE INDEX IF NOT EXISTS idx_shopping_items_week ON shopping_items(week_start);
     CREATE INDEX IF NOT EXISTS idx_shopping_items_user_id ON shopping_items(user_id);
+
+    CREATE TABLE IF NOT EXISTS todos (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      done INTEGER NOT NULL DEFAULT 0,
+      due_date TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_todos_user_id ON todos(user_id);
   `);
   // マイグレーション: 既存テーブルにカラム追加
   try { db.exec(`ALTER TABLE dishes ADD COLUMN recipe_text TEXT`); } catch {}

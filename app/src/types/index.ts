@@ -39,6 +39,14 @@ export interface ShoppingItem {
   auto?: boolean;
 }
 
+export interface Todo {
+  id: string;
+  title: string;
+  done: number;
+  due_date?: string;
+  created_at: string;
+}
+
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
   breakfast: '朝食',
   lunch: '昼食',

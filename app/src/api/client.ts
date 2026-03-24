@@ -1,4 +1,4 @@
-import { Dish, Ingredient, MealPlan, MealType, ShoppingItem } from '../types';
+import { Dish, Ingredient, MealPlan, MealType, ShoppingItem, Todo } from '../types';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || '/api';
 
@@ -75,6 +75,17 @@ export const mealPlansApi = {
   create: (data: { date: string; meal_type: MealType; dish_id: string }) =>
     request<MealPlan>('/meal-plans', { method: 'POST', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/meal-plans/${id}`, { method: 'DELETE' }),
+};
+
+// Todos
+export const todosApi = {
+  list: () => request<Todo[]>('/todos'),
+  create: (data: { title: string; due_date?: string }) =>
+    request<Todo>('/todos', { method: 'POST', body: JSON.stringify(data) }),
+  toggle: (id: string) => request<Todo>(`/todos/${id}/toggle`, { method: 'PATCH' }),
+  update: (id: string, data: { title: string; due_date?: string }) =>
+    request<Todo>(`/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => request<void>(`/todos/${id}`, { method: 'DELETE' }),
 };
 
 // Shopping
