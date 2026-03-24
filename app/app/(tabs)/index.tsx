@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Modal,
-  FlatList, TextInput, ScrollView
+  FlatList, TextInput, useWindowDimensions
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
@@ -32,6 +32,8 @@ function addDays(d: Date, days: number): Date {
 }
 
 export default function CalendarScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date()));
   const weekEnd = addDays(weekStart, 6);
   const from = formatDate(weekStart);
@@ -97,38 +99,41 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Week Navigation */}
-      <View style={styles.weekNav}>
-        <TouchableOpacity
-          style={styles.navBtn}
-          onPress={() => setWeekStart(prev => addDays(prev, -7))}
-        >
-          <Text style={styles.navBtnText}>◀</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setWeekStart(getMondayOfWeek(new Date()))}
-        >
-          <Text style={styles.weekLabel}>{weekLabel}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navBtn}
-          onPress={() => setWeekStart(prev => addDays(prev, 7))}
-        >
-          <Text style={styles.navBtnText}>▶</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={[styles.page, isDesktop && styles.pageDesktop]}>
+        <View style={styles.weekNav}>
+          <TouchableOpacity
+            style={styles.navBtn}
+            onPress={() => setWeekStart(prev => addDays(prev, -7))}
+          >
+            <Text style={styles.navBtnText}>◀</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setWeekStart(getMondayOfWeek(new Date()))}
+          >
+            <Text style={styles.weekLabel}>{weekLabel}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navBtn}
+            onPress={() => setWeekStart(prev => addDays(prev, 7))}
+          >
+            <Text style={styles.navBtnText}>▶</Text>
+          </TouchableOpacity>
+        </View>
 
-      {loading ? (
-        <LoadingView />
-      ) : (
-        <CalendarWeekView
-          weekStart={weekStart}
-          mealPlans={mealPlans}
-          onDayPress={() => {}}
-          onMealPress={handleMealPress}
-          onAddMeal={handleAddMeal}
-        />
-      )}
+        <View style={styles.calendarPanel}>
+          {loading ? (
+            <LoadingView />
+          ) : (
+            <CalendarWeekView
+              weekStart={weekStart}
+              mealPlans={mealPlans}
+              onDayPress={() => {}}
+              onMealPress={handleMealPress}
+              onAddMeal={handleAddMeal}
+            />
+          )}
+        </View>
+      </View>
 
       {/* Add Meal Modal */}
       <Modal visible={!!addModal} animationType="slide" presentationStyle="pageSheet">
@@ -201,19 +206,23 @@ export default function CalendarScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  page: { flex: 1, width: '100%', alignSelf: 'center' },
+  pageDesktop: { maxWidth: 1280, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
   weekNav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 16,
   },
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 16, color: Colors.primary, fontWeight: '700' },
   weekLabel: { fontSize: 15, fontWeight: '600', color: Colors.text },
+  calendarPanel: { flex: 1, minHeight: 0 },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
     flexDirection: 'row',

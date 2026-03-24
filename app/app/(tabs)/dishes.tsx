@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  Alert, Modal, TextInput, ScrollView, Linking
+  Alert, Modal, TextInput, ScrollView, Linking, useWindowDimensions
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
@@ -19,6 +19,9 @@ interface IngredientInput {
 const EMPTY_INGREDIENT: IngredientInput = { name: '', quantity: '', unit: '' };
 
 export default function DishesScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
+  const isWideDesktop = width >= 1200;
   const { dishes, loading, reload, createDish, updateDish, deleteDish } = useDishes();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
@@ -106,63 +109,78 @@ export default function DishesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="料理を検索..."
-          value={search}
-          onChangeText={setSearch}
-          placeholderTextColor={Colors.textSecondary}
-        />
-        <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <Text style={styles.addBtnText}>+ 追加</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={[styles.page, isDesktop && styles.pageDesktop]}>
+        <View style={[styles.searchBar, isDesktop && styles.searchBarDesktop]}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="料理を検索..."
+            value={search}
+            onChangeText={setSearch}
+            placeholderTextColor={Colors.textSecondary}
+          />
+          <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
+            <Text style={styles.addBtnText}>+ 追加</Text>
+          </TouchableOpacity>
+        </View>
 
-      {loading ? (
-        <LoadingView />
-      ) : filtered.length === 0 ? (
-        <EmptyState title="料理がありません" subtitle="「+ 追加」ボタンから料理を登録しましょう" />
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={d => d.id}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardName}>{item.name}</Text>
-                <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                  <Text style={styles.deleteIcon}>削除</Text>
-                </TouchableOpacity>
-              </View>
+        <View style={styles.listPanel}>
+          {loading ? (
+            <LoadingView />
+          ) : filtered.length === 0 ? (
+            <EmptyState title="料理がありません" subtitle="「+ 追加」ボタンから料理を登録しましょう" />
+          ) : (
+            <FlatList
+              data={filtered}
+              keyExtractor={d => d.id}
+              contentContainerStyle={styles.list}
+              numColumns={isWideDesktop ? 3 : isDesktop ? 2 : 1}
+              key={isWideDesktop ? '3-col' : isDesktop ? '2-col' : '1-col'}
+              columnWrapperStyle={isDesktop ? styles.columnWrap : undefined}
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.cardWrap,
+                    isDesktop && styles.cardWrapDesktop,
+                    isWideDesktop && styles.cardWrapWide,
+                  ]}
+                >
+                  <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardName}>{item.name}</Text>
+                      <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                        <Text style={styles.deleteIcon}>削除</Text>
+                      </TouchableOpacity>
+                    </View>
 
-              {item.ingredients.length > 0 && (
-                <View style={styles.ingredientList}>
-                  {item.ingredients.slice(0, 4).map((ing, i) => (
-                    <View key={ing.id} style={styles.ingredientChip}>
-                      <Text style={styles.ingredientText}>
-                        {ing.name}{ing.quantity > 0 ? ` ${ing.quantity}${ing.unit}` : ''}
-                      </Text>
-                    </View>
-                  ))}
-                  {item.ingredients.length > 4 && (
-                    <View style={styles.ingredientChip}>
-                      <Text style={styles.ingredientText}>+{item.ingredients.length - 4}</Text>
-                    </View>
-                  )}
+                    {item.ingredients.length > 0 && (
+                      <View style={styles.ingredientList}>
+                        {item.ingredients.slice(0, 4).map((ing) => (
+                          <View key={ing.id} style={styles.ingredientChip}>
+                            <Text style={styles.ingredientText}>
+                              {ing.name}{ing.quantity > 0 ? ` ${ing.quantity}${ing.unit}` : ''}
+                            </Text>
+                          </View>
+                        ))}
+                        {item.ingredients.length > 4 && (
+                          <View style={styles.ingredientChip}>
+                            <Text style={styles.ingredientText}>+{item.ingredients.length - 4}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+
+                    {item.recipe_url ? (
+                      <TouchableOpacity onPress={() => Linking.openURL(item.recipe_url!)}>
+                        <Text style={styles.recipeUrl} numberOfLines={1}>{item.recipe_url}</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </TouchableOpacity>
                 </View>
               )}
-
-              {item.recipe_url ? (
-                <TouchableOpacity onPress={() => Linking.openURL(item.recipe_url!)}>
-                  <Text style={styles.recipeUrl} numberOfLines={1}>{item.recipe_url}</Text>
-                </TouchableOpacity>
-              ) : null}
-            </TouchableOpacity>
+            />
           )}
-        />
-      )}
+        </View>
+      </View>
 
       {/* Add/Edit Modal */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
@@ -248,14 +266,18 @@ export default function DishesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  page: { flex: 1, width: '100%' },
+  pageDesktop: { maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
   searchBar: {
     flexDirection: 'row',
     padding: 12,
     backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 16,
     gap: 8,
   },
+  searchBarDesktop: { padding: 16, gap: 12 },
   searchInput: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -275,7 +297,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addBtnText: { color: Colors.background, fontWeight: '700', fontSize: 14 },
-  list: { padding: 12, gap: 8 },
+  listPanel: { flex: 1, minHeight: 0 },
+  list: { paddingVertical: 12 },
+  columnWrap: { gap: 12, marginBottom: 12 },
+  cardWrap: { width: '100%', marginBottom: 12 },
+  cardWrapDesktop: { flex: 1 },
+  cardWrapWide: { flex: 1 },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 12,
@@ -285,6 +312,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minHeight: 150,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardName: { fontSize: 16, fontWeight: '700', color: Colors.text, flex: 1 },

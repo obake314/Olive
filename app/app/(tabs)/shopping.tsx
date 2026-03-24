@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  Alert, Modal, TextInput, SectionList
+  Alert, Modal, TextInput, SectionList, useWindowDimensions
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
@@ -32,6 +32,8 @@ function formatWeekLabel(weekStart: string): string {
 }
 
 export default function ShoppingScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date()));
   const { items, loading, reload, generate, addCustom, toggleCheck, deleteItem } = useShopping(weekStart);
   const [addModal, setAddModal] = useState(false);
@@ -124,50 +126,52 @@ export default function ShoppingScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Week Navigation */}
-      <View style={styles.weekNav}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => setWeekStart(w => addWeeks(w, -1))}>
-          <Text style={styles.navBtnText}>◀</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setWeekStart(getMondayOfWeek(new Date()))}>
-          <Text style={styles.weekLabel}>{formatWeekLabel(weekStart)}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navBtn} onPress={() => setWeekStart(w => addWeeks(w, 1))}>
-          <Text style={styles.navBtnText}>▶</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={[styles.page, isDesktop && styles.pageDesktop]}>
+        <View style={styles.weekNav}>
+          <TouchableOpacity style={styles.navBtn} onPress={() => setWeekStart(w => addWeeks(w, -1))}>
+            <Text style={styles.navBtnText}>◀</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setWeekStart(getMondayOfWeek(new Date()))}>
+            <Text style={styles.weekLabel}>{formatWeekLabel(weekStart)}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navBtn} onPress={() => setWeekStart(w => addWeeks(w, 1))}>
+            <Text style={styles.navBtnText}>▶</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.generateBtn} onPress={handleGenerate}>
-          <Text style={styles.generateBtnText}>献立から生成</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.customAddBtn} onPress={() => setAddModal(true)}>
-          <Text style={styles.customAddBtnText}>+ カスタム追加</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={[styles.actions, isDesktop && styles.actionsDesktop]}>
+          <TouchableOpacity style={styles.generateBtn} onPress={handleGenerate}>
+            <Text style={styles.generateBtnText}>献立から生成</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.customAddBtn} onPress={() => setAddModal(true)}>
+            <Text style={styles.customAddBtnText}>+ カスタム追加</Text>
+          </TouchableOpacity>
+        </View>
 
-      {loading ? (
-        <LoadingView />
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="買い物リストが空です"
-          subtitle="「献立から生成」を押すか、手動でアイテムを追加してください"
-        />
-      ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          renderSectionHeader={({ section }) => (
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-            </View>
+        <View style={styles.listPanel}>
+          {loading ? (
+            <LoadingView />
+          ) : items.length === 0 ? (
+            <EmptyState
+              title="買い物リストが空です"
+              subtitle="「献立から生成」を押すか、手動でアイテムを追加してください"
+            />
+          ) : (
+            <SectionList
+              sections={sections}
+              keyExtractor={item => item.id}
+              renderItem={renderItem}
+              renderSectionHeader={({ section }) => (
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                </View>
+              )}
+              contentContainerStyle={styles.list}
+              stickySectionHeadersEnabled={false}
+            />
           )}
-          contentContainerStyle={styles.list}
-          stickySectionHeadersEnabled={false}
-        />
-      )}
+        </View>
+      </View>
 
       {/* Add Custom Item Modal */}
       <Modal visible={addModal} transparent animationType="slide">
@@ -220,15 +224,18 @@ export default function ShoppingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  page: { flex: 1, width: '100%' },
+  pageDesktop: { maxWidth: 980, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
   weekNav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 16,
   },
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 16, color: Colors.primary, fontWeight: '700' },
@@ -238,9 +245,12 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
     backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 16,
+    marginTop: 12,
   },
+  actionsDesktop: { padding: 16, gap: 12 },
   generateBtn: {
     flex: 1,
     backgroundColor: Colors.primary,
@@ -259,6 +269,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   customAddBtnText: { color: Colors.primary, fontWeight: '700', fontSize: 14 },
+  listPanel: { flex: 1, minHeight: 0 },
   list: { padding: 12 },
   sectionHeader: { paddingVertical: 8, paddingHorizontal: 4 },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase' },

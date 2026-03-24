@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import { MealPlan, MealType, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '../types';
 import { Colors } from './Colors';
 import { MealTypeTag } from './MealTypeTag';
@@ -33,18 +33,24 @@ function getWeekDays(weekStart: Date): Date[] {
 const DAY_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
 
 export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal }: Props) {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
   const days = getWeekDays(weekStart);
   const today = formatDate(new Date());
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, isDesktop && styles.contentDesktop]}
+      showsVerticalScrollIndicator={false}
+    >
       {days.map((day, idx) => {
         const dateStr = formatDate(day);
         const isToday = dateStr === today;
         const dayPlans = mealPlans.filter(p => p.date === dateStr);
 
         return (
-          <View key={dateStr} style={styles.dayRow}>
+          <View key={dateStr} style={[styles.dayRow, isDesktop && styles.dayRowDesktop]}>
             <View style={[styles.dayHeader, isToday && styles.todayHeader]}>
               <Text style={[styles.dayLabel, isToday && styles.todayLabel]}>
                 {DAY_LABELS[idx]}
@@ -61,7 +67,7 @@ export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal 
                 return (
                   <View key={mealType} style={styles.mealSlot}>
                     <Text style={styles.mealTypeLabel}>{MEAL_TYPE_LABELS[mealType]}</Text>
-                    <View style={styles.mealItems}>
+                    <View style={[styles.mealItems, isDesktop && styles.mealItemsDesktop]}>
                       {mealsForSlot.map(plan => (
                         <TouchableOpacity
                           key={plan.id}
@@ -93,10 +99,11 @@ export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  content: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 20 },
+  contentDesktop: { width: '100%', maxWidth: 1240, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
   dayRow: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
-    marginHorizontal: 12,
     marginTop: 8,
     borderRadius: 12,
     overflow: 'hidden',
@@ -106,8 +113,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  dayRowDesktop: { marginTop: 14, borderWidth: 1, borderColor: Colors.border },
   dayHeader: {
-    width: 48,
+    width: 60,
     backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
@@ -124,20 +132,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     marginTop: 4,
   },
-  mealsContainer: { flex: 1, padding: 8 },
-  mealSlot: { marginBottom: 6 },
-  mealTypeLabel: { fontSize: 10, color: Colors.textSecondary, marginBottom: 3 },
+  mealsContainer: { flex: 1, padding: 12 },
+  mealSlot: { marginBottom: 10 },
+  mealTypeLabel: { fontSize: 11, color: Colors.textSecondary, marginBottom: 6, fontWeight: '600' },
   mealItems: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  mealItemsDesktop: { gap: 8 },
   mealChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 16,
-    maxWidth: 160,
+    maxWidth: 220,
   },
   mealChipText: { fontSize: 13, fontWeight: '500', color: Colors.text },
   addButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.border,

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView,
+  KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { Colors } from '../src/components/Colors';
 
 export default function LoginScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
   const { login, register } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -52,69 +54,79 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        <Text style={styles.logo}>Olive</Text>
-        <Text style={styles.subtitle}>家族の献立を一緒に管理</Text>
-
-        <View style={styles.card}>
-          <View style={styles.tabs}>
-            <TouchableOpacity
-              style={[styles.tab, mode === 'login' && styles.tabActive]}
-              onPress={() => setMode('login')}
-            >
-              <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>ログイン</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, mode === 'register' && styles.tabActive]}
-              onPress={() => setMode('register')}
-            >
-              <Text style={[styles.tabText, mode === 'register' && styles.tabTextActive]}>新規登録</Text>
-            </TouchableOpacity>
+        <View style={[styles.shell, isDesktop && styles.shellDesktop]}>
+          <View style={[styles.brandPanel, isDesktop && styles.brandPanelDesktop]}>
+            <Text style={styles.logo}>Olive</Text>
+            <Text style={styles.subtitle}>家族の献立を一緒に管理</Text>
+            {isDesktop ? (
+              <View style={styles.brandCard}>
+                <Text style={styles.brandCardTitle}>週単位で献立を見渡せる、落ち着いた家族向けプランナー。</Text>
+                <Text style={styles.brandCardText}>料理マスタ、献立カレンダー、買い物リストをひとつの流れで扱えます。</Text>
+              </View>
+            ) : null}
           </View>
 
-          {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+          <View style={[styles.card, isDesktop && styles.cardDesktop]}>
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tab, mode === 'login' && styles.tabActive]}
+                onPress={() => setMode('login')}
+              >
+                <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>ログイン</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, mode === 'register' && styles.tabActive]}
+                onPress={() => setMode('register')}
+              >
+                <Text style={[styles.tabText, mode === 'register' && styles.tabTextActive]}>新規登録</Text>
+              </TouchableOpacity>
+            </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="メールアドレス"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor={Colors.textSecondary}
-          />
+            {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
-          <TextInput
-            style={styles.input}
-            placeholder="パスワード"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor={Colors.textSecondary}
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="メールアドレス"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor={Colors.textSecondary}
+            />
 
-          <TouchableOpacity
-            style={[styles.btn, loading && styles.btnDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            <Text style={styles.btnText}>
-              {loading ? '処理中...' : mode === 'login' ? 'ログイン' : '登録する'}
-            </Text>
-          </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="パスワード"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor={Colors.textSecondary}
+            />
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>または</Text>
-            <View style={styles.dividerLine} />
+            <TouchableOpacity
+              style={[styles.btn, loading && styles.btnDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              <Text style={styles.btnText}>
+                {loading ? '処理中...' : mode === 'login' ? 'ログイン' : '登録する'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>または</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.demoBtn, loading && styles.btnDisabled]}
+              onPress={handleDemo}
+              disabled={loading}
+            >
+              <Text style={styles.demoBtnText}>デモアカウントで試す</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={[styles.demoBtn, loading && styles.btnDisabled]}
-            onPress={handleDemo}
-            disabled={loading}
-          >
-            <Text style={styles.demoBtnText}>デモアカウントで試す</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -123,16 +135,34 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  inner: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+  inner: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 },
+  shell: { width: '100%', maxWidth: 1080, alignSelf: 'center', gap: 24 },
+  shellDesktop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  brandPanel: { alignItems: 'center' },
+  brandPanelDesktop: { flex: 1, alignItems: 'flex-start', paddingRight: 40 },
   logo: { fontSize: 44, textAlign: 'center', marginBottom: 8, color: Colors.primaryDark, fontWeight: '700' },
-  subtitle: { fontSize: 16, color: Colors.textSecondary, textAlign: 'center', marginBottom: 32 },
+  subtitle: { fontSize: 16, color: Colors.textSecondary, textAlign: 'center', marginBottom: 20 },
+  brandCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: Colors.accent,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  brandCardTitle: { fontSize: 24, lineHeight: 34, color: Colors.primaryDark, fontWeight: '700', marginBottom: 12 },
+  brandCardText: { fontSize: 15, lineHeight: 24, color: Colors.primaryDark },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 24,
     borderWidth: 1,
     borderColor: Colors.border,
+    width: '100%',
+    maxWidth: 520,
   },
+  cardDesktop: { padding: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 6 },
   tabs: { flexDirection: 'row', marginBottom: 20, borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: Colors.background },
   tabActive: { backgroundColor: Colors.primary },
