@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { getDb } from '../db/database';
+import { getDb, seedDefaultDishes } from '../db/database';
 import { signToken, authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -23,6 +23,7 @@ router.post('/register', async (req: Request, res: Response) => {
   const password_hash = await bcrypt.hash(password, 10);
   const id = uuidv4();
   db.prepare('INSERT INTO users (id, email, password_hash, name) VALUES (?, ?, ?, ?)').run(id, email, password_hash, name);
+  seedDefaultDishes(id);
   const token = signToken(id);
   res.status(201).json({ token, user: { id, email, name } });
 });

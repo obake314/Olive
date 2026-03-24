@@ -110,24 +110,26 @@ function seedDemoAccount(): void {
   );
 }
 
+const DEFAULT_DISH_NAMES = [
+  '寿司', '刺身', '天ぷら', 'うどん', '蕎麦', 'ラーメン', '丼物', '肉じゃが', 'おでん', '照り焼きチキン',
+  '豚肉の生姜焼き', 'さばの味噌煮', 'ぶりの照り焼き', '肉豆腐', '鶏の唐揚げ', 'とんかつ', 'きんぴらごぼう',
+  '茶碗蒸し', 'ひじきと大豆の五目煮', 'ほうれん草のごま和え', 'かぼちゃの煮物', '味噌汁', '焼き魚',
+  '卵焼き/だし巻き卵', 'お好み焼き', 'たこ焼き', '餃子', 'カレーライス', '筑前煮', '豆腐'
+];
+
+export function seedDefaultDishes(userId: string): void {
+  const db = getDb();
+  const stmt = db.prepare('INSERT INTO dishes (id, user_id, name) VALUES (?, ?, ?)');
+  const checkStmt = db.prepare('SELECT id FROM dishes WHERE user_id = ? AND name = ?');
+  for (const name of DEFAULT_DISH_NAMES) {
+    if (!checkStmt.get(userId, name)) {
+      stmt.run(uuidv4(), userId, name);
+    }
+  }
+}
+
 function seedDishes(): void {
   const user = db.prepare("SELECT id FROM users WHERE email = 'demo@olive.app'").get() as { id: string } | undefined;
   if (!user) return;
-
-  const dishNames = [
-    '寿司', '刺身', '天ぷら', 'うどん', '蕎麦', 'ラーメン', '丼物', '肉じゃが', 'おでん', '照り焼きチキン',
-    '豚肉の生姜焼き', 'さばの味噌煮', 'ぶりの照り焼き', '肉豆腐', '鶏の唐揚げ', 'とんかつ', 'きんぴらごぼう',
-    '茶碗蒸し', 'ひじきと大豆の五目煮', 'ほうれん草のごま和え', 'かぼちゃの煮物', '味噌汁', '焼き魚',
-    '卵焼き/だし巻き卵', 'お好み焼き', 'たこ焼き', '餃子', 'カレーライス', '筑前煮', '豆腐'
-  ];
-
-  const stmt = db.prepare('INSERT INTO dishes (id, user_id, name) VALUES (?, ?, ?)');
-  const checkStmt = db.prepare('SELECT id FROM dishes WHERE user_id = ? AND name = ?');
-
-  for (const name of dishNames) {
-    const existingDish = checkStmt.get(user.id, name);
-    if (!existingDish) {
-      stmt.run(uuidv4(), user.id, name);
-    }
-  }
+  seedDefaultDishes(user.id);
 }
