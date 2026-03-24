@@ -60,7 +60,7 @@ router.post('/', (req: Request, res: Response) => {
 
   const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(id);
   const savedIngredients = db.prepare('SELECT * FROM ingredients WHERE dish_id = ?').all(id);
-  res.status(201).json({ ...dish, ingredients: savedIngredients });
+  res.status(201).json({ ...(dish as any), ingredients: savedIngredients });
 });
 
 // PUT /dishes/:id
@@ -91,7 +91,7 @@ router.put('/:id', (req: Request, res: Response) => {
 
   const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(req.params.id);
   const savedIngredients = db.prepare('SELECT * FROM ingredients WHERE dish_id = ?').all(req.params.id);
-  res.json({ ...dish, ingredients: savedIngredients });
+  res.json({ ...(dish as any), ingredients: savedIngredients });
 });
 
 // DELETE /dishes/:id
