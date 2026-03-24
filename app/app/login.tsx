@@ -11,12 +11,11 @@ export default function LoginScreen() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!email || !password || (mode === 'register' && !name)) {
-      Alert.alert('入力エラー', '全ての項目を入力してください');
+    if (!email || !password) {
+      Alert.alert('入力エラー', 'メールアドレスとパスワードを入力してください');
       return;
     }
     setLoading(true);
@@ -24,8 +23,19 @@ export default function LoginScreen() {
       if (mode === 'login') {
         await login(email, password);
       } else {
-        await register(email, password, name);
+        await register(email, password);
       }
+    } catch (e: any) {
+      Alert.alert('エラー', e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemo = async () => {
+    setLoading(true);
+    try {
+      await login('demo@olive.app', 'demo1234');
     } catch (e: any) {
       Alert.alert('エラー', e.message);
     } finally {
@@ -58,17 +68,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {mode === 'register' && (
-            <TextInput
-              style={styles.input}
-              placeholder="お名前"
-              value={name}
-              onChangeText={setName}
-              placeholderTextColor={Colors.textSecondary}
-              autoCapitalize="none"
-            />
-          )}
-
           <TextInput
             style={styles.input}
             placeholder="メールアドレス"
@@ -96,6 +95,20 @@ export default function LoginScreen() {
             <Text style={styles.btnText}>
               {loading ? '処理中...' : mode === 'login' ? 'ログイン' : '登録する'}
             </Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>または</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.demoBtn, loading && styles.btnDisabled]}
+            onPress={handleDemo}
+            disabled={loading}
+          >
+            <Text style={styles.demoBtnText}>🫒 デモアカウントで試す</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -139,4 +152,15 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.6 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: { marginHorizontal: 12, fontSize: 12, color: Colors.textSecondary },
+  demoBtn: {
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    borderRadius: 10,
+    padding: 16,
+    alignItems: 'center',
+  },
+  demoBtnText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
 });

@@ -1,5 +1,7 @@
 import Database from 'better-sqlite3';
+import bcrypt from 'bcryptjs';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../data/olive.db');
 
@@ -76,4 +78,14 @@ function initSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_shopping_items_week ON shopping_items(week_start);
     CREATE INDEX IF NOT EXISTS idx_shopping_items_user_id ON shopping_items(user_id);
   `);
+  seedDemoAccount();
+}
+
+async function seedDemoAccount(): Promise<void> {
+  const existing = db.prepare("SELECT id FROM users WHERE email = 'demo@olive.app'").get();
+  if (existing) return;
+  const password_hash = await bcrypt.hash('demo1234', 10);
+  db.prepare('INSERT INTO users (id, email, password_hash, name) VALUES (?, ?, ?, ?)').run(
+    uuidv4(), 'demo@olive.app', password_hash, 'デモ'
+  );
 }

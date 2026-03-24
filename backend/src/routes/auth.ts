@@ -8,11 +8,12 @@ const router = Router();
 
 // POST /auth/register
 router.post('/register', async (req: Request, res: Response) => {
-  const { email, password, name } = req.body;
-  if (!email || !password || !name) {
-    res.status(400).json({ error: 'email, password, name are required' });
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.status(400).json({ error: 'email and password are required' });
     return;
   }
+  const name = email.split('@')[0];
   const db = getDb();
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing) {
