@@ -148,13 +148,18 @@ export default function DishesScreen() {
   };
 
   const handleDelete = (dish: Dish) => {
-    Alert.alert('削除確認', `「${dish.name}」を削除しますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      { text: '削除', style: 'destructive', onPress: async () => {
-        try { await deleteDish(dish.id); setDetailDish(null); }
-        catch (e: any) { Alert.alert('エラー', e.message); }
-      }},
-    ]);
+    const id = dish.id;
+    const name = dish.name;
+    setDetailDish(null);
+    setTimeout(() => {
+      Alert.alert('削除確認', `「${name}」を削除しますか？`, [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '削除', style: 'destructive', onPress: async () => {
+          try { await deleteDish(id); }
+          catch (e: any) { Alert.alert('エラー', e.message); }
+        }},
+      ]);
+    }, 300);
   };
 
   const toggleTag = (tag: string) => {
@@ -214,25 +219,35 @@ export default function DishesScreen() {
               columnWrapperStyle={isDesktop ? styles.columnWrap : undefined}
               renderItem={({ item }) => (
                 <View style={[styles.cardWrap, isDesktop && styles.cardWrapDesktop, isWideDesktop && styles.cardWrapWide]}>
-                  <TouchableOpacity style={styles.card} onPress={() => setDetailDish(item)}>
-                    {item.image_data ? (
-                      <Image source={{ uri: item.image_data }} style={styles.cardImage} resizeMode="cover" />
-                    ) : (
-                      <View style={styles.cardImagePlaceholder} />
-                    )}
-                    <View style={styles.cardBody}>
-                      <Text style={styles.cardName}>{item.name}</Text>
-                      {item.tags.length > 0 && (
-                        <View style={styles.tagList}>
-                          {item.tags.map(tag => (
-                            <View key={tag} style={styles.tagChip}>
-                              <Text style={styles.tagText}>{tag}</Text>
-                            </View>
-                          ))}
-                        </View>
+                  <View style={styles.card}>
+                    <TouchableOpacity style={styles.cardMain} onPress={() => setDetailDish(item)}>
+                      {item.image_data ? (
+                        <Image source={{ uri: item.image_data }} style={styles.cardImage} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.cardImagePlaceholder} />
                       )}
+                      <View style={styles.cardBody}>
+                        <Text style={styles.cardName}>{item.name}</Text>
+                        {item.tags.length > 0 && (
+                          <View style={styles.tagList}>
+                            {item.tags.map(tag => (
+                              <View key={tag} style={styles.tagChip}>
+                                <Text style={styles.tagText}>{tag}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                    <View style={styles.cardActions}>
+                      <TouchableOpacity style={styles.cardEditBtn} onPress={() => openEdit(item)}>
+                        <Text style={styles.cardEditBtnText}>編集</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.cardDeleteBtn} onPress={() => handleDelete(item)}>
+                        <Text style={styles.cardDeleteBtnText}>削除</Text>
+                      </TouchableOpacity>
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 </View>
               )}
             />
@@ -471,12 +486,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 10, overflow: 'hidden',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4,
     elevation: 2, borderWidth: 1, borderColor: Colors.border,
-    flexDirection: 'row', alignItems: 'stretch',
   },
+  cardMain: { flexDirection: 'row', alignItems: 'stretch' },
   cardImage: { width: 90, height: 90 },
   cardImagePlaceholder: { width: 90, height: 90, backgroundColor: Colors.background },
   cardBody: { flex: 1, padding: 12, justifyContent: 'center', gap: 6 },
   cardName: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  cardActions: {
+    flexDirection: 'row', borderTopWidth: 1, borderTopColor: Colors.border,
+  },
+  cardEditBtn: {
+    flex: 1, paddingVertical: 8, alignItems: 'center', justifyContent: 'center',
+    borderRightWidth: 1, borderRightColor: Colors.border,
+  },
+  cardEditBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '700' },
+  cardDeleteBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },
+  cardDeleteBtnText: { fontSize: 13, color: Colors.error, fontWeight: '700' },
   tagList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   tagChip: {
     backgroundColor: Colors.primaryLight, paddingHorizontal: 8, paddingVertical: 2,

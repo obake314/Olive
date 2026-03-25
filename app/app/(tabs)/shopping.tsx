@@ -35,11 +35,15 @@ export default function ShoppingScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(new Date()));
-  const { items, loading, reload, generate, addCustom, toggleCheck, deleteItem } = useShopping(weekStart);
+  const { items, loading, reload, generate, addCustom, toggleCheck, updateItem, deleteItem } = useShopping(weekStart);
   const [addModal, setAddModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newQty, setNewQty] = useState('');
   const [newUnit, setNewUnit] = useState('');
+  const [editModal, setEditModal] = useState<ShoppingItem | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editQty, setEditQty] = useState('');
+  const [editUnit, setEditUnit] = useState('');
 
   useFocusEffect(useCallback(() => { reload(); }, [reload]));
 
@@ -73,11 +77,28 @@ export default function ShoppingScreen() {
     }
   };
 
-  const handleDelete = (item: ShoppingItem) => {
-    if (item.auto) {
-      Alert.alert('確認', '自動生成アイテムは献立から生成されます。\n削除するには献立を変更してください。');
-      return;
+  const openEdit = (item: ShoppingItem) => {
+    setEditModal(item);
+    setEditName(item.name);
+    setEditQty(item.quantity > 0 ? String(item.quantity) : '');
+    setEditUnit(item.unit);
+  };
+
+  const handleEditSave = async () => {
+    if (!editModal || !editName.trim()) return;
+    try {
+      await updateItem(editModal.id, {
+        name: editName.trim(),
+        quantity: parseFloat(editQty) || 0,
+        unit: editUnit.trim(),
+      });
+      setEditModal(null);
+    } catch (e: any) {
+      Alert.alert('エラー', e.message);
     }
+  };
+
+  const handleDelete = (item: ShoppingItem) => {
     Alert.alert('削除', `「${item.name}」を削除しますか？`, [
       { text: 'キャンセル', style: 'cancel' },
       {
@@ -100,28 +121,32 @@ export default function ShoppingScreen() {
   ];
 
   const renderItem = ({ item }: { item: ShoppingItem }) => (
-    <TouchableOpacity
-      style={[styles.item, !!item.checked && styles.itemChecked]}
-      onPress={() => toggleCheck(item.id)}
-      onLongPress={() => handleDelete(item)}
-    >
-      <View style={[styles.checkbox, !!item.checked && styles.checkboxChecked]}>
-        {item.checked ? <Text style={styles.checkboxMark}>✓</Text> : null}
-      </View>
-      <View style={styles.itemContent}>
-        <Text style={[styles.itemName, !!item.checked && styles.itemNameChecked]}>
-          {item.name}
-        </Text>
-        {(item.quantity > 0 || item.unit) && (
-          <Text style={styles.itemQty}>
-            {item.quantity > 0 ? item.quantity : ''} {item.unit}
+    <View style={[styles.item, !!item.checked && styles.itemChecked]}>
+      <TouchableOpacity style={styles.itemCheckArea} onPress={() => toggleCheck(item.id)}>
+        <View style={[styles.checkbox, !!item.checked && styles.checkboxChecked]}>
+          {item.checked ? <Text style={styles.checkboxMark}>✓</Text> : null}
+        </View>
+        <View style={styles.itemContent}>
+          <Text style={[styles.itemName, !!item.checked && styles.itemNameChecked]}>
+            {item.name}
           </Text>
-        )}
-      </View>
-      {item.custom ? (
-        <View style={styles.customBadge}><Text style={styles.customBadgeText}>追加</Text></View>
-      ) : null}
-    </TouchableOpacity>
+          {(item.quantity > 0 || item.unit) && (
+            <Text style={styles.itemQty}>
+              {item.quantity > 0 ? item.quantity : ''} {item.unit}
+            </Text>
+          )}
+        </View>
+        {item.custom ? (
+          <View style={styles.customBadge}><Text style={styles.customBadgeText}>追加</Text></View>
+        ) : null}
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.itemEditBtn} onPress={() => openEdit(item)}>
+        <Text style={styles.itemEditBtnText}>編集</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.itemDeleteBtn} onPress={() => handleDelete(item)}>
+        <Text style={styles.itemDeleteBtnText}>削除</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -172,6 +197,52 @@ export default function ShoppingScreen() {
           )}
         </View>
       </View>
+
+      {/* Edit Item Modal */}
+      <Modal visible={!!editModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.addModalCard}>
+            <Text style={styles.addModalTitle}>アイテムを編集</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="食材名 *"
+              value={editName}
+              onChangeText={setEditName}
+              placeholderTextColor={Colors.textSecondary}
+              autoFocus
+            />
+            <View style={styles.qtyRow}>
+              <TextInput
+                style={[styles.modalInput, styles.qtyInput]}
+                placeholder="数量"
+                value={editQty}
+                onChangeText={setEditQty}
+                keyboardType="decimal-pad"
+                placeholderTextColor={Colors.textSecondary}
+              />
+              <TextInput
+                style={[styles.modalInput, styles.unitInput]}
+                placeholder="単位"
+                value={editUnit}
+                onChangeText={setEditUnit}
+                placeholderTextColor={Colors.textSecondary}
+              />
+            </View>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setEditModal(null)}>
+                <Text style={styles.modalCancelText}>キャンセル</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, !editName.trim() && styles.disabled]}
+                onPress={handleEditSave}
+                disabled={!editName.trim()}
+              >
+                <Text style={styles.modalSaveText}>保存</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Add Custom Item Modal */}
       <Modal visible={addModal} transparent animationType="slide">
@@ -282,15 +353,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.surface,
     borderRadius: 4,
-    padding: 12,
     marginBottom: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
+    overflow: 'hidden',
   },
   itemChecked: { opacity: 0.5 },
+  itemCheckArea: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 12 },
+  itemEditBtn: { paddingHorizontal: 12, paddingVertical: 12, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: Colors.border },
+  itemEditBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '700' },
+  itemDeleteBtn: { paddingHorizontal: 12, paddingVertical: 12, justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: Colors.border },
+  itemDeleteBtnText: { fontSize: 13, color: Colors.error, fontWeight: '700' },
   checkbox: {
     width: 24,
     height: 24,

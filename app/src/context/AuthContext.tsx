@@ -9,6 +9,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  avatar_data?: string;
 }
 
 interface AuthContextValue {
@@ -17,6 +18,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<{ message: string }>;
   logout: () => void;
+  updateProfile: (data: { name: string; avatar_data?: string }) => Promise<void>;
+  requestEmailChange: (email: string, password: string) => Promise<{ message: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -83,8 +86,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateProfile = async (data: { name: string; avatar_data?: string }) => {
+    const updated = await authApi.updateProfile(data);
+    setUser(updated);
+  };
+
+  const requestEmailChange = async (email: string, password: string) => {
+    return authApi.requestEmailChange(email, password);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, requestEmailChange }}>
       {children}
     </AuthContext.Provider>
   );

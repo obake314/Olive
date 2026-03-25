@@ -38,7 +38,15 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  me: () => request<{ id: string; email: string; name: string }>('/auth/me'),
+  me: () => request<{ id: string; email: string; name: string; avatar_data?: string }>('/auth/me'),
+  updateProfile: (data: { name: string; avatar_data?: string }) =>
+    request<{ id: string; email: string; name: string; avatar_data?: string }>('/auth/profile', {
+      method: 'PUT', body: JSON.stringify(data),
+    }),
+  requestEmailChange: (email: string, password: string) =>
+    request<{ message: string }>('/auth/email', {
+      method: 'PUT', body: JSON.stringify({ email, password }),
+    }),
 };
 
 // Dishes
@@ -81,10 +89,10 @@ export const mealPlansApi = {
 // Todos
 export const todosApi = {
   list: () => request<Todo[]>('/todos'),
-  create: (data: { title: string; due_date?: string }) =>
+  create: (data: { title: string; due_date?: string; assignee_id?: string }) =>
     request<Todo>('/todos', { method: 'POST', body: JSON.stringify(data) }),
   toggle: (id: string) => request<Todo>(`/todos/${id}/toggle`, { method: 'PATCH' }),
-  update: (id: string, data: { title: string; due_date?: string }) =>
+  update: (id: string, data: { title: string; due_date?: string; assignee_id?: string }) =>
     request<Todo>(`/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/todos/${id}`, { method: 'DELETE' }),
 };
@@ -109,5 +117,7 @@ export const shoppingApi = {
     request<ShoppingItem>('/shopping', { method: 'POST', body: JSON.stringify(data) }),
   toggleCheck: (id: string) =>
     request<ShoppingItem>(`/shopping/${id}/check`, { method: 'PATCH' }),
+  update: (id: string, data: { name: string; quantity?: number; unit?: string }) =>
+    request<ShoppingItem>(`/shopping/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/shopping/${id}`, { method: 'DELETE' }),
 };

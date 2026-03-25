@@ -152,6 +152,9 @@ function initSchema(): void {
   try { db.exec(`ALTER TABLE dishes ADD COLUMN image_data TEXT`); } catch {}
   try { db.exec(`ALTER TABLE dishes ADD COLUMN tags TEXT NOT NULL DEFAULT ''`); } catch {}
   try { db.exec(`ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE todos ADD COLUMN assignee_id TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN avatar_data TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN pending_email TEXT`); } catch {}
   // デモアカウントは認証済みにする
   db.exec(`UPDATE users SET email_verified = 1 WHERE email = 'demo@olive.app'`);
 

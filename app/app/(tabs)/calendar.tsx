@@ -689,4 +689,9 @@ const styles = StyleSheet.create({
     borderRadius: 8, paddingVertical: 10, alignItems: 'center',
   },
   dayModalAddText: { fontSize: 14, color: Colors.textSecondary },
+  todoInput: {
+    backgroundColor: Colors.surface, borderRadius: 8,
+    borderWidth: 1, borderColor: Colors.border, padding: 12, minHeight: 44, fontSize: 16, color: Colors.text,
+  },
+  clearDate: { fontSize: 13, color: Colors.error, marginTop: 6, textAlign: 'center' },
 });

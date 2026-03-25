@@ -3,6 +3,23 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '../db/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
+// 調味料として買い物リストから除外する単位・名称
+const SEASONING_UNITS = new Set(['適量', '少々', 'お好みで', 'ひとつまみ', '少量', 'g未満']);
+const SEASONING_NAMES = new Set([
+  '塩', '砂糖', '薄口しょうゆ', 'しょうゆ', '醤油', '味噌', 'みそ', '酢', 'みりん', '本みりん',
+  '酒', '料理酒', '油', 'サラダ油', 'ごま油', 'オリーブオイル', 'オリーブ油', 'バター',
+  'こしょう', '胡椒', '黒こしょう', '白こしょう', 'ソース', 'マヨネーズ', 'ケチャップ',
+  '片栗粉', '小麦粉', '薄力粉', '強力粉', 'だし', 'だし汁', '出汁', '顆粒だし', '和風だし',
+  'コンソメ', '鶏がらスープ', '中華スープの素', '豆板醤', '甜麺醤', 'オイスターソース',
+  '白だし', 'めんつゆ', 'ポン酢', '七味', '一味', 'わさび', '辛子', '粒マスタード',
+]);
+
+function isSeasoning(name: string, unit: string): boolean {
+  if (SEASONING_UNITS.has(unit.trim())) return true;
+  if (SEASONING_NAMES.has(name.trim())) return true;
+  return false;
+}
+
 const router = Router();
 router.use(authenticate);
 
@@ -37,7 +54,7 @@ router.get('/', (req: AuthRequest, res: Response) => {
 
   const existingNames = new Set(existingItems.filter(i => !i.custom).map((i: any) => `${i.name.toLowerCase()}:${i.unit}`));
   const autoItems = mealIngredients
-    .filter(i => !existingNames.has(`${i.name.toLowerCase()}:${i.unit}`))
+    .filter(i => !existingNames.has(`${i.name.toLowerCase()}:${i.unit}`) && !isSeasoning(i.name, i.unit))
     .map(i => ({
       id: `auto_${i.name}_${i.unit}`,
       week_start: weekStart,
@@ -81,6 +98,8 @@ router.post('/generate', (req: AuthRequest, res: Response) => {
 
   db.prepare('DELETE FROM shopping_items WHERE week_start = ? AND custom = 0 AND user_id = ?').run(weekStart, req.userId);
 
+  const filteredIngredients = mealIngredients.filter(i => !isSeasoning(i.name, i.unit));
+
   const insert = db.prepare(
     'INSERT INTO shopping_items (id, user_id, week_start, name, quantity, unit, checked, custom) VALUES (?, ?, ?, ?, ?, ?, 0, 0)'
   );
@@ -89,7 +108,7 @@ router.post('/generate', (req: AuthRequest, res: Response) => {
       insert.run(uuidv4(), req.userId, weekStart, item.name, item.total_quantity, item.unit);
     }
   });
-  insertMany(mealIngredients);
+  insertMany(filteredIngredients);
 
   const items = db.prepare('SELECT * FROM shopping_items WHERE week_start = ? AND user_id = ? ORDER BY name').all(weekStart, req.userId);
   res.json(items);
@@ -120,6 +139,21 @@ router.patch('/:id/check', (req: AuthRequest, res: Response) => {
     item.checked ? 0 : 1,
     req.params.id
   );
+  const updated = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(req.params.id);
+  res.json(updated);
+});
+
+// PUT /shopping/:id - Edit item name/quantity/unit
+router.put('/:id', (req: AuthRequest, res: Response) => {
+  const db = getDb();
+  const item = db.prepare('SELECT * FROM shopping_items WHERE id = ? AND user_id = ?').get(req.params.id, req.userId) as any;
+  if (!item) return res.status(404).json({ error: 'Not found' });
+
+  const { name, quantity, unit } = req.body;
+  if (!name) return res.status(400).json({ error: 'name is required' });
+
+  db.prepare('UPDATE shopping_items SET name = ?, quantity = ?, unit = ? WHERE id = ?')
+    .run(name, quantity ?? item.quantity, unit ?? item.unit, req.params.id);
   const updated = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(req.params.id);
   res.json(updated);
 });

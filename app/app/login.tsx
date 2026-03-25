@@ -66,7 +66,7 @@ export default function LoginScreen() {
             {isDesktop ? (
               <View style={styles.brandCard}>
                 <Text style={styles.brandCardTitle}>週単位で献立を見渡せる、落ち着いた家族向けプランナー。</Text>
-                <Text style={styles.brandCardText}>料理、献立カレンダー、買い物をひとつの流れで扱えます。</Text>
+                <Text style={styles.brandCardText}>料理、カレンダー、買い物をひとつの流れで扱えます。</Text>
               </View>
             ) : null}
           </View>

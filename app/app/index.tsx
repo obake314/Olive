@@ -10,7 +10,7 @@ const HERO_IMAGE = require('../assets/hero.jpg');
 
 const FEATURES = [
   {
-    title: '献立カレンダー',
+    title: 'カレンダー',
     desc: '週・月単位で献立を管理。家族全員が同じカレンダーを共有できるので「今日の夕食は？」が一目でわかります。',
   },
   {
@@ -22,7 +22,7 @@ const FEATURES = [
     desc: '献立から必要な材料を自動生成。家族全員がリアルタイムで共有・チェックできます。',
   },
   {
-    title: 'TODO管理',
+    title: 'TODO',
     desc: '家族の共有タスクを一元管理。期限設定で期限切れのタスクはひと目でわかります。',
   },
   {

@@ -108,7 +108,7 @@ export default function HomeScreen() {
       {recentDishes.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>料理マスタ</Text>
+            <Text style={styles.sectionTitle}>料理</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/dishes')}>
               <Text style={styles.sectionLink}>すべて見る →</Text>
             </TouchableOpacity>

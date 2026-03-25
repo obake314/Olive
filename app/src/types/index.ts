@@ -58,6 +58,9 @@ export interface Todo {
   done: number;
   due_date?: string;
   created_at: string;
+  assignee_id?: string;
+  assignee_name?: string;
+  created_by_name?: string;
 }
 
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {

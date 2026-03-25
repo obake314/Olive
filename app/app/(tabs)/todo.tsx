@@ -8,8 +8,8 @@ import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
 import { LoadingView } from '../../src/components/LoadingView';
 import { EmptyState } from '../../src/components/EmptyState';
-import { todosApi } from '../../src/api/client';
-import { Todo } from '../../src/types';
+import { todosApi, familyApi } from '../../src/api/client';
+import { Todo, FamilyMember } from '../../src/types';
 
 export default function TodoScreen() {
   const { width } = useWindowDimensions();
@@ -17,16 +17,22 @@ export default function TodoScreen() {
 
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [assigneeId, setAssigneeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
   const reload = useCallback(async () => {
     try {
-      const data = await todosApi.list();
+      const [data, familyData] = await Promise.all([
+        todosApi.list(),
+        familyApi.get(),
+      ]);
       setTodos(data);
+      setFamilyMembers(familyData.members);
     } catch (e: any) {
       Alert.alert('エラー', e.message);
     } finally {
@@ -40,6 +46,7 @@ export default function TodoScreen() {
     setEditingTodo(null);
     setTitle('');
     setDueDate('');
+    setAssigneeId('');
     setModalVisible(true);
   };
 
@@ -47,6 +54,7 @@ export default function TodoScreen() {
     setEditingTodo(todo);
     setTitle(todo.title);
     setDueDate(todo.due_date || '');
+    setAssigneeId(todo.assignee_id || '');
     setModalVisible(true);
   };
 
@@ -54,7 +62,11 @@ export default function TodoScreen() {
     if (!title.trim()) { Alert.alert('エラー', 'タイトルを入力してください'); return; }
     setSaving(true);
     try {
-      const payload = { title: title.trim(), due_date: dueDate.trim() || undefined };
+      const payload = {
+        title: title.trim(),
+        due_date: dueDate.trim() || undefined,
+        assignee_id: assigneeId || undefined,
+      };
       if (editingTodo) {
         const updated = await todosApi.update(editingTodo.id, payload);
         setTodos(prev => prev.map(t => t.id === updated.id ? updated : t));
@@ -99,6 +111,8 @@ export default function TodoScreen() {
     ]);
   };
 
+  const hasFamily = familyMembers.length > 1;
+
   const pending = todos.filter(t => !t.done);
   const done = todos.filter(t => t.done);
 
@@ -115,6 +129,9 @@ export default function TodoScreen() {
           <Text style={[styles.itemDue, isOverdue(item) && styles.itemDueOverdue]}>
             期限: {item.due_date}
           </Text>
+        )}
+        {hasFamily && item.assignee_name && (
+          <Text style={styles.itemAssignee}>担当: {item.assignee_name}</Text>
         )}
       </TouchableOpacity>
       <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
@@ -193,6 +210,32 @@ export default function TodoScreen() {
                 <Text style={styles.clearDate}>期限をクリア</Text>
               </TouchableOpacity>
             ) : null}
+            {hasFamily && (
+              <>
+                <Text style={styles.label}>担当者 (任意)</Text>
+                <View style={styles.assigneeList}>
+                  <TouchableOpacity
+                    style={[styles.assigneeChip, !assigneeId && styles.assigneeChipActive]}
+                    onPress={() => setAssigneeId('')}
+                  >
+                    <Text style={[styles.assigneeChipText, !assigneeId && styles.assigneeChipTextActive]}>
+                      未割り当て
+                    </Text>
+                  </TouchableOpacity>
+                  {familyMembers.map(m => (
+                    <TouchableOpacity
+                      key={m.id}
+                      style={[styles.assigneeChip, assigneeId === m.id && styles.assigneeChipActive]}
+                      onPress={() => setAssigneeId(m.id)}
+                    >
+                      <Text style={[styles.assigneeChipText, assigneeId === m.id && styles.assigneeChipTextActive]}>
+                        {m.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
             <View style={{ height: 40 }} />
           </ScrollView>
         </View>
@@ -242,6 +285,7 @@ const styles = StyleSheet.create({
   itemTitleDone: { textDecorationLine: 'line-through', color: Colors.textSecondary },
   itemDue: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   itemDueOverdue: { color: '#e53e3e', fontWeight: '600' },
+  itemAssignee: { fontSize: 12, color: Colors.primary, marginTop: 2, fontWeight: '600' },
   deleteText: { fontSize: 14, color: Colors.primaryDark, fontWeight: '700' },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
@@ -260,4 +304,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.border, padding: 12, minHeight: 44, fontSize: 16, color: Colors.text,
   },
   clearDate: { fontSize: 13, color: Colors.error, marginTop: 6, textAlign: 'center' },
+  assigneeList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  assigneeChip: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+    borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surface,
+  },
+  assigneeChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
+  assigneeChipText: { fontSize: 14, color: Colors.textSecondary, fontWeight: '600' },
+  assigneeChipTextActive: { color: Colors.primaryDark },
 });

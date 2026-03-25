@@ -52,10 +52,15 @@ export function useShopping(weekStart: string) {
     setItems(prev => prev.map(i => i.id === id ? updated : i));
   };
 
+  const updateItem = async (id: string, data: { name: string; quantity?: number; unit?: string }) => {
+    const updated = await shoppingApi.update(id, data);
+    setItems(prev => prev.map(i => i.id === id ? updated : i));
+  };
+
   const deleteItem = async (id: string) => {
     await shoppingApi.delete(id);
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
-  return { items, loading, error, reload: load, generate, addCustom, toggleCheck, deleteItem };
+  return { items, loading, error, reload: load, generate, addCustom, toggleCheck, updateItem, deleteItem };
 }
