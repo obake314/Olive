@@ -1,15 +1,8 @@
 import { Tabs, router } from 'expo-router';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../src/components/Colors';
 import { useAuth } from '../../src/context/AuthContext';
-
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  return (
-    <View style={[styles.iconContainer, focused && styles.iconFocused]}>
-      <Text style={[styles.iconLabel, focused && styles.iconLabelFocused]}>{label}</Text>
-    </View>
-  );
-}
 
 export default function TabLayout() {
   const { user, logout } = useAuth();
@@ -45,7 +38,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'カレンダー',
-          tabBarIcon: ({ focused }) => <TabIcon label="週" focused={focused} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
           headerTitle: 'Olive 献立カレンダー',
         }}
       />
@@ -53,7 +46,7 @@ export default function TabLayout() {
         name="dishes"
         options={{
           title: '料理',
-          tabBarIcon: ({ focused }) => <TabIcon label="料" focused={focused} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" size={size} color={color} />,
           headerTitle: 'Olive 料理',
         }}
       />
@@ -61,7 +54,7 @@ export default function TabLayout() {
         name="shopping"
         options={{
           title: '買い物',
-          tabBarIcon: ({ focused }) => <TabIcon label="買" focused={focused} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="cart-outline" size={size} color={color} />,
           headerTitle: 'Olive 買い物',
         }}
       />
@@ -69,7 +62,7 @@ export default function TabLayout() {
         name="todo"
         options={{
           title: 'TODO',
-          tabBarIcon: ({ focused }) => <TabIcon label="TO" focused={focused} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-circle-outline" size={size} color={color} />,
           headerTitle: 'Olive TODO',
         }}
       />
@@ -77,17 +70,10 @@ export default function TabLayout() {
         name="family"
         options={{
           title: '家族',
-          tabBarIcon: ({ focused }) => <TabIcon label="家" focused={focused} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
           headerTitle: 'Olive 家族',
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  iconContainer: { padding: 4, borderRadius: 4 },
-  iconFocused: { backgroundColor: Colors.primaryLight },
-  iconLabel: { fontSize: 15, fontWeight: '700', color: Colors.textSecondary },
-  iconLabelFocused: { color: Colors.primaryDark },
-});
