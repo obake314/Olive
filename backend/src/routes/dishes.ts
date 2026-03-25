@@ -160,7 +160,9 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 // DELETE /dishes/:id
 router.delete('/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
-  const result = db.prepare('DELETE FROM dishes WHERE id = ? AND user_id = ?').run(req.params.id, req.userId);
+  const userIds = getFamilyUserIds(req.userId!);
+  const ph = userIds.map(() => '?').join(',');
+  const result = db.prepare(`DELETE FROM dishes WHERE id = ? AND user_id IN (${ph})`).run(req.params.id, ...userIds);
   if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
   res.status(204).send();
 });

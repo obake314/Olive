@@ -297,12 +297,6 @@ const DEFAULT_DISHES: DefaultDish[] = [
     ingredients: [{ name: '小麦粉', quantity: 100, unit: 'g' }, { name: 'だし汁', quantity: 100, unit: 'ml' }, { name: '卵', quantity: 1, unit: '個' }, { name: 'キャベツ', quantity: 200, unit: 'g' }, { name: '豚バラ薄切り', quantity: 100, unit: 'g' }, { name: 'お好みソース', quantity: 0, unit: '適量' }, { name: 'マヨネーズ', quantity: 0, unit: '適量' }, { name: '青のり', quantity: 0, unit: '適量' }],
   },
   {
-    name: '天ぷら',
-    image_file: 'tempura.jpg',
-    recipe_text: '1. 衣は冷水・卵・小麦粉をさっくり混ぜる（混ぜすぎない）。\n2. えび・野菜に薄く小麦粉をはたいてから衣をつける。\n3. 170℃の油で揚げる（野菜は2〜3分、えびは2分）。\n4. 天つゆ（だし汁・しょうゆ・みりん）と大根おろしを添えて盛り付ける。',
-    ingredients: [{ name: 'えび', quantity: 6, unit: '尾' }, { name: 'さつまいも', quantity: 1, unit: '本' }, { name: 'なす', quantity: 1, unit: '本' }, { name: 'ししとう', quantity: 6, unit: '本' }, { name: '小麦粉', quantity: 100, unit: 'g' }, { name: '卵', quantity: 1, unit: '個' }, { name: '冷水', quantity: 150, unit: 'ml' }, { name: '揚げ油', quantity: 500, unit: 'ml' }],
-  },
-  {
     name: '茶碗蒸し',
     image_file: 'chawanmushi.jpg',
     recipe_text: '1. だし汁・薄口しょうゆ・みりん・塩を混ぜ、溶き卵に加えて漉す。\n2. 器に具材（鶏肉・えび・しいたけ・三つ葉）を入れ、卵液を注ぐ。\n3. 蒸し器で強火2分→弱火12分蒸す。\n4. 三つ葉を飾って完成。',

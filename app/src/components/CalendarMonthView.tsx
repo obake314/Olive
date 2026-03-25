@@ -12,10 +12,10 @@ interface Props {
   onAddMeal: (date: string, mealType: MealType) => void;
 }
 
-const MEAL_DOTS: Record<MealType, string> = {
-  breakfast: '🌅',
-  lunch: '☀️',
-  dinner: '🌙',
+const MEAL_DOT_COLORS: Record<string, string> = {
+  breakfast: '#f5a623',
+  lunch: Colors.lunch,
+  dinner: Colors.primary,
 };
 
 export function CalendarMonthView({ year, month, mealPlans, todos = [], onDayPress, onAddMeal }: Props) {
@@ -69,27 +69,20 @@ export function CalendarMonthView({ year, month, mealPlans, todos = [], onDayPre
             const plans = plansByDate[dateStr] || [];
             const dayTodos = todosByDate[dateStr] || [];
             const isToday = dateStr === todayStr;
+            const dayNumStyle = [styles.dayNum, isToday && styles.dayNumToday, di === 0 && styles.sun, di === 6 && styles.sat];
             return (
               <TouchableOpacity
                 key={di}
                 style={[styles.cell, isToday && styles.cellToday]}
                 onPress={() => onDayPress(dateStr)}
               >
-                <Text style={[styles.dayNum, isToday && styles.dayNumToday, di === 0 && styles.sun, di === 6 && styles.sat]}>
-                  {day}
-                </Text>
-                <View style={styles.planList}>
-                  {plans.slice(0, 2).map(p => (
-                    <Text key={p.id} style={styles.planText} numberOfLines={1}>
-                      {MEAL_DOTS[p.meal_type]} {p.dish_name}
-                    </Text>
-                  ))}
-                  {dayTodos.slice(0, 1).map(t => (
-                    <Text key={t.id} style={styles.todoText} numberOfLines={1}>📋 {t.title}</Text>
-                  ))}
-                  {plans.length === 0 && dayTodos.length === 0 && (
-                    <Text style={styles.addHint}>+ 追加</Text>
-                  )}
+                <Text style={dayNumStyle}>{day}</Text>
+                <View style={styles.dotRow}>
+                  {(['breakfast', 'lunch', 'dinner'] as const).map(mt => {
+                    const has = plans.some(p => p.meal_type === mt);
+                    return has ? <View key={mt} style={[styles.dot, { backgroundColor: MEAL_DOT_COLORS[mt] }]} /> : null;
+                  })}
+                  {dayTodos.length > 0 && <View style={[styles.dot, styles.dotTodo]} />}
                 </View>
               </TouchableOpacity>
             );
@@ -107,15 +100,14 @@ const styles = StyleSheet.create({
   dowLabel: { flex: 1, textAlign: 'center', fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   sun: { color: '#e05' },
   sat: { color: '#05e' },
-  weekRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: Colors.border, minHeight: 80 },
+  weekRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: Colors.border, minHeight: 52 },
   cell: {
     flex: 1, padding: 4, borderRightWidth: 1, borderColor: Colors.border,
   },
   cellToday: { backgroundColor: Colors.accent },
   dayNum: { fontSize: 14, fontWeight: '600', color: Colors.text, marginBottom: 2 },
   dayNumToday: { color: Colors.primary },
-  planList: { gap: 2 },
-  planText: { fontSize: 13, color: Colors.text, lineHeight: 18 },
-  todoText: { fontSize: 11, color: Colors.textSecondary, lineHeight: 16 },
-  addHint: { fontSize: 13, color: Colors.textSecondary },
+  dotRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginTop: 2 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  dotTodo: { backgroundColor: '#7c5cbf' },
 });

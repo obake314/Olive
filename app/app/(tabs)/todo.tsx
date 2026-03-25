@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  TextInput, Modal, Alert, useWindowDimensions, ScrollView,
+  TextInput, Modal, Alert, useWindowDimensions, ScrollView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DatePickerField } from '../../src/components/DatePickerField';
@@ -116,20 +116,22 @@ export default function TodoScreen() {
   };
 
   const handleDelete = (todo: Todo) => {
-    Alert.alert('削除確認', `「${todo.title}」を削除しますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '削除', style: 'destructive',
-        onPress: async () => {
-          try {
-            await todosApi.delete(todo.id);
-            setTodos(prev => prev.filter(t => t.id !== todo.id));
-          } catch (e: any) {
-            Alert.alert('エラー', e.message);
-          }
-        },
-      },
-    ]);
+    const doDelete = async () => {
+      try {
+        await todosApi.delete(todo.id);
+        setTodos(prev => prev.filter(t => t.id !== todo.id));
+      } catch (e: any) {
+        Alert.alert('エラー', e.message);
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`「${todo.title}」を削除しますか？`)) doDelete();
+    } else {
+      Alert.alert('削除確認', `「${todo.title}」を削除しますか？`, [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '削除', style: 'destructive', onPress: doDelete },
+      ]);
+    }
   };
 
   // --- Wishlist handlers ---
@@ -174,20 +176,22 @@ export default function TodoScreen() {
   };
 
   const handleDeleteWish = (item: WishlistItem) => {
-    Alert.alert('削除確認', `「${item.name}」を削除しますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '削除', style: 'destructive',
-        onPress: async () => {
-          try {
-            await wishlistsApi.delete(item.id);
-            setWishlists(prev => prev.filter(w => w.id !== item.id));
-          } catch (e: any) {
-            Alert.alert('エラー', e.message);
-          }
-        },
-      },
-    ]);
+    const doDelete = async () => {
+      try {
+        await wishlistsApi.delete(item.id);
+        setWishlists(prev => prev.filter(w => w.id !== item.id));
+      } catch (e: any) {
+        Alert.alert('エラー', e.message);
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`「${item.name}」を削除しますか？`)) doDelete();
+    } else {
+      Alert.alert('削除確認', `「${item.name}」を削除しますか？`, [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '削除', style: 'destructive', onPress: doDelete },
+      ]);
+    }
   };
 
   const hasFamily = familyMembers.length > 1;

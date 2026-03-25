@@ -171,15 +171,22 @@ export default function DishesScreen() {
     const id = dish.id;
     const dishName = dish.name;
     setDetailDish(null);
-    setTimeout(() => {
-      Alert.alert('削除確認', `「${dishName}」を削除しますか？`, [
-        { text: 'キャンセル', style: 'cancel' },
-        { text: '削除', style: 'destructive', onPress: async () => {
-          try { await deleteDish(id); }
-          catch (e: any) { Alert.alert('エラー', e.message); }
-        }},
-      ]);
-    }, 300);
+    const doDelete = async () => {
+      try { await deleteDish(id); }
+      catch (e: any) { Alert.alert('エラー', e.message); }
+    };
+    if (Platform.OS === 'web') {
+      setTimeout(() => {
+        if (window.confirm(`「${dishName}」を削除しますか？`)) doDelete();
+      }, 100);
+    } else {
+      setTimeout(() => {
+        Alert.alert('削除確認', `「${dishName}」を削除しますか？`, [
+          { text: 'キャンセル', style: 'cancel' },
+          { text: '削除', style: 'destructive', onPress: doDelete },
+        ]);
+      }, 300);
+    }
   };
 
   const toggleTag = (tag: string) => {
