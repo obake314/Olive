@@ -241,48 +241,66 @@ export default function DishesScreen() {
       </View>
 
       {/* 確認モーダル */}
-      <Modal visible={!!detailDish} transparent animationType="fade">
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setDetailDish(null)}>
-          <TouchableOpacity style={styles.detailCard} activeOpacity={1} onPress={() => {}}>
-            {detailDish && (
-              <>
-                {detailDish.image_data ? (
-                  <Image source={{ uri: detailDish.image_data }} style={styles.detailImage} resizeMode="cover" />
-                ) : null}
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailName}>{detailDish.name}</Text>
-                  {detailDish.tags.length > 0 && (
-                    <View style={styles.tagList}>
-                      {detailDish.tags.map(tag => (
-                        <View key={tag} style={styles.tagChip}>
-                          <Text style={styles.tagText}>{tag}</Text>
-                        </View>
-                      ))}
+      <Modal visible={!!detailDish} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modal}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setDetailDish(null)}>
+              <Text style={styles.modalCancel}>閉じる</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{detailDish?.name ?? ''}</Text>
+            <View style={{ width: 60 }} />
+          </View>
+          {detailDish && (
+            <ScrollView style={styles.modalBody}>
+              {detailDish.image_data ? (
+                <Image source={{ uri: detailDish.image_data }} style={styles.detailImage} resizeMode="cover" />
+              ) : null}
+              <Text style={styles.detailName}>{detailDish.name}</Text>
+              {detailDish.tags.length > 0 && (
+                <View style={[styles.tagList, { marginBottom: 8 }]}>
+                  {detailDish.tags.map(tag => (
+                    <View key={tag} style={styles.tagChip}>
+                      <Text style={styles.tagText}>{tag}</Text>
                     </View>
-                  )}
-                  {detailDish.recipe_url ? (
-                    <TouchableOpacity onPress={() => Linking.openURL(detailDish.recipe_url!)}>
-                      <Text style={styles.detailUrl} numberOfLines={1}>{detailDish.recipe_url}</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                  {detailDish.recipe_text ? (
-                    <ScrollView style={styles.detailRecipeScroll} nestedScrollEnabled>
-                      <Text style={styles.detailRecipe}>{detailDish.recipe_text}</Text>
-                    </ScrollView>
-                  ) : null}
-                  <View style={styles.detailActions}>
-                    <TouchableOpacity style={styles.detailEditBtn} onPress={() => openEdit(detailDish)}>
-                      <Text style={styles.detailEditBtnText}>編集</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.detailDeleteBtn} onPress={() => handleDelete(detailDish)}>
-                      <Text style={styles.detailDeleteBtnText}>削除</Text>
-                    </TouchableOpacity>
-                  </View>
+                  ))}
                 </View>
-              </>
-            )}
-          </TouchableOpacity>
-        </TouchableOpacity>
+              )}
+              {detailDish.recipe_url ? (
+                <TouchableOpacity onPress={() => Linking.openURL(detailDish.recipe_url!)}>
+                  <Text style={styles.detailUrl} numberOfLines={1}>{detailDish.recipe_url}</Text>
+                </TouchableOpacity>
+              ) : null}
+              {detailDish.ingredients.length > 0 && (
+                <>
+                  <Text style={styles.detailSectionTitle}>材料</Text>
+                  {detailDish.ingredients.map((ing, i) => (
+                    <View key={i} style={styles.detailIngredientRow}>
+                      <Text style={styles.detailIngredientName}>{ing.name}</Text>
+                      <Text style={styles.detailIngredientQty}>
+                        {ing.quantity > 0 ? `${ing.quantity} ${ing.unit}` : ing.unit || '適量'}
+                      </Text>
+                    </View>
+                  ))}
+                </>
+              )}
+              {detailDish.recipe_text ? (
+                <>
+                  <Text style={styles.detailSectionTitle}>作り方</Text>
+                  <Text style={styles.detailRecipe}>{detailDish.recipe_text}</Text>
+                </>
+              ) : null}
+              <View style={styles.detailActions}>
+                <TouchableOpacity style={styles.detailEditBtn} onPress={() => openEdit(detailDish)}>
+                  <Text style={styles.detailEditBtnText}>編集</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.detailDeleteBtn} onPress={() => handleDelete(detailDish)}>
+                  <Text style={styles.detailDeleteBtnText}>削除</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          )}
+        </View>
       </Modal>
 
       {/* 編集モーダル */}
@@ -472,19 +490,15 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 12, color: Colors.primaryDark, fontWeight: '600' },
   tagRemove: { fontSize: 11, color: Colors.primaryDark },
   // 確認モーダル
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', alignItems: 'center' },
-  detailCard: {
-    backgroundColor: Colors.surface, borderRadius: 14, width: '88%', maxWidth: 400,
-    overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 12, elevation: 8,
-  },
-  detailImage: { width: '100%', height: 180 },
-  detailContent: { padding: 18 },
+  detailImage: { width: '100%', height: 200, borderRadius: 8, marginBottom: 12 },
   detailName: { fontSize: 20, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  detailUrl: { fontSize: 13, color: Colors.primary, marginTop: 8 },
-  detailRecipeScroll: { maxHeight: 140, marginTop: 10 },
-  detailRecipe: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
-  detailActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  detailSectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.textSecondary, marginTop: 16, marginBottom: 8 },
+  detailIngredientRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  detailIngredientName: { fontSize: 15, color: Colors.text },
+  detailIngredientQty: { fontSize: 15, color: Colors.textSecondary },
+  detailUrl: { fontSize: 13, color: Colors.primary, marginBottom: 4 },
+  detailRecipe: { fontSize: 14, color: Colors.textSecondary, lineHeight: 22 },
+  detailActions: { flexDirection: 'row', gap: 10, marginTop: 24 },
   detailEditBtn: {
     flex: 1, backgroundColor: Colors.primary, paddingVertical: 10,
     borderRadius: 8, alignItems: 'center',

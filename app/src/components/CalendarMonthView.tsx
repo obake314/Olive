@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Colors } from './Colors';
-import { MealPlan, MealType } from '../types';
+import { MealPlan, MealType, Todo } from '../types';
 
 interface Props {
   year: number;
   month: number; // 0-indexed
   mealPlans: MealPlan[];
+  todos?: Todo[];
   onDayPress: (date: string) => void;
   onAddMeal: (date: string, mealType: MealType) => void;
 }
@@ -17,7 +18,7 @@ const MEAL_DOTS: Record<MealType, string> = {
   dinner: '🌙',
 };
 
-export function CalendarMonthView({ year, month, mealPlans, onDayPress, onAddMeal }: Props) {
+export function CalendarMonthView({ year, month, mealPlans, todos = [], onDayPress, onAddMeal }: Props) {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
 
@@ -31,6 +32,14 @@ export function CalendarMonthView({ year, month, mealPlans, onDayPress, onAddMea
   for (const p of mealPlans) {
     if (!plansByDate[p.date]) plansByDate[p.date] = [];
     plansByDate[p.date].push(p);
+  }
+
+  // TODOをdateでグループ化
+  const todosByDate: Record<string, Todo[]> = {};
+  for (const t of todos) {
+    if (!t.due_date || t.done) continue;
+    if (!todosByDate[t.due_date]) todosByDate[t.due_date] = [];
+    todosByDate[t.due_date].push(t);
   }
 
   const cells: (number | null)[] = [
@@ -58,6 +67,7 @@ export function CalendarMonthView({ year, month, mealPlans, onDayPress, onAddMea
             if (!day) return <View key={di} style={styles.cell} />;
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const plans = plansByDate[dateStr] || [];
+            const dayTodos = todosByDate[dateStr] || [];
             const isToday = dateStr === todayStr;
             return (
               <TouchableOpacity
@@ -69,15 +79,16 @@ export function CalendarMonthView({ year, month, mealPlans, onDayPress, onAddMea
                   {day}
                 </Text>
                 <View style={styles.planList}>
-                  {plans.slice(0, 3).map(p => (
+                  {plans.slice(0, 2).map(p => (
                     <Text key={p.id} style={styles.planText} numberOfLines={1}>
                       {MEAL_DOTS[p.meal_type]} {p.dish_name}
                     </Text>
                   ))}
-                  {plans.length === 0 && (
-                    <TouchableOpacity onPress={() => onAddMeal(dateStr, 'dinner')}>
-                      <Text style={styles.addHint}>+ 追加</Text>
-                    </TouchableOpacity>
+                  {dayTodos.slice(0, 1).map(t => (
+                    <Text key={t.id} style={styles.todoText} numberOfLines={1}>📋 {t.title}</Text>
+                  ))}
+                  {plans.length === 0 && dayTodos.length === 0 && (
+                    <Text style={styles.addHint}>+ 追加</Text>
                   )}
                 </View>
               </TouchableOpacity>
@@ -105,5 +116,6 @@ const styles = StyleSheet.create({
   dayNumToday: { color: Colors.primary },
   planList: { gap: 2 },
   planText: { fontSize: 13, color: Colors.text, lineHeight: 18 },
+  todoText: { fontSize: 11, color: Colors.textSecondary, lineHeight: 16 },
   addHint: { fontSize: 13, color: Colors.textSecondary },
 });

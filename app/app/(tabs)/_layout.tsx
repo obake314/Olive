@@ -98,7 +98,7 @@ export default function TabLayout() {
           options={{
             title: 'カレンダー',
             tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
-            headerTitle: '献立カレンダー',
+            headerTitle: 'カレンダー',
           }}
         />
         <Tabs.Screen
@@ -106,7 +106,7 @@ export default function TabLayout() {
           options={{
             title: '料理',
             tabBarIcon: ({ color, size }) => <Ionicons name="restaurant-outline" size={size} color={color} />,
-            headerTitle: '料理マスタ',
+            headerTitle: '料理',
           }}
         />
         <Tabs.Screen
@@ -114,7 +114,7 @@ export default function TabLayout() {
           options={{
             title: '買い物',
             tabBarIcon: ({ color, size }) => <Ionicons name="cart-outline" size={size} color={color} />,
-            headerTitle: '買い物リスト',
+            headerTitle: '買い物',
           }}
         />
         <Tabs.Screen

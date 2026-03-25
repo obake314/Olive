@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  TextInput, Modal, Alert, useWindowDimensions,
+  TextInput, Modal, Alert, useWindowDimensions, ScrollView,
 } from 'react-native';
+import { DatePickerField } from '../../src/components/DatePickerField';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
 import { LoadingView } from '../../src/components/LoadingView';
@@ -175,7 +176,7 @@ export default function TodoScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.modalBody}>
+          <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
             <Text style={styles.label}>タスク名 *</Text>
             <TextInput
               style={styles.input}
@@ -186,15 +187,14 @@ export default function TodoScreen() {
               autoFocus
             />
             <Text style={styles.label}>期限 (任意)</Text>
-            <TextInput
-              style={styles.input}
-              value={dueDate}
-              onChangeText={setDueDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="numbers-and-punctuation"
-            />
-          </View>
+            <DatePickerField value={dueDate} onChange={setDueDate} placeholder="期限なし" />
+            {dueDate ? (
+              <TouchableOpacity onPress={() => setDueDate('')}>
+                <Text style={styles.clearDate}>期限をクリア</Text>
+              </TouchableOpacity>
+            ) : null}
+            <View style={{ height: 40 }} />
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -259,4 +259,5 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 8,
     borderWidth: 1, borderColor: Colors.border, padding: 12, minHeight: 44, fontSize: 16, color: Colors.text,
   },
+  clearDate: { fontSize: 13, color: Colors.error, marginTop: 6, textAlign: 'center' },
 });

@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, Modal,
-  FlatList, TextInput, useWindowDimensions, ScrollView, Image,
+  FlatList, TextInput, useWindowDimensions, ScrollView, Image, Switch,
 } from 'react-native';
+import { DatePickerField } from '../../src/components/DatePickerField';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
 import { CalendarWeekView } from '../../src/components/CalendarWeekView';
@@ -100,11 +101,16 @@ export default function CalendarScreen() {
   const { mealPlans, loading, reload, addMealPlan, removeMealPlan } = useMealPlans(from, to);
   const { dishes } = useDishes();
 
+  const [showMeals, setShowMeals] = useState(true);
+  const [showTodos, setShowTodos] = useState(true);
+
   const [addModal, setAddModal] = useState<{ date: string; mealType: MealType } | null>(null);
   const [selectedDishId, setSelectedDishId] = useState<string>('');
   const [dishSearch, setDishSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [detailModal, setDetailModal] = useState<MealPlan | null>(null);
+  // 日付タップモーダル
+  const [dayModal, setDayModal] = useState<string | null>(null);
 
   const reloadTodos = useCallback(async () => {
     setTodosLoading(true);
@@ -286,14 +292,23 @@ export default function CalendarScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Show/hide switches */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>献立</Text>
+              <Switch value={showMeals} onValueChange={setShowMeals} trackColor={{ true: Colors.primary }} thumbColor="#fff" />
+              <Text style={[styles.switchLabel, { marginLeft: 12 }]}>TODO期限</Text>
+              <Switch value={showTodos} onValueChange={setShowTodos} trackColor={{ true: Colors.primary }} thumbColor="#fff" />
+            </View>
+
             <View style={styles.calendarPanel}>
               {loading ? (
                 <LoadingView />
               ) : viewMode === 'week' ? (
                 <CalendarWeekView
                   weekStart={weekStart}
-                  mealPlans={mealPlans}
-                  onDayPress={() => {}}
+                  mealPlans={showMeals ? mealPlans : []}
+                  todos={showTodos ? todos : []}
+                  onDayPress={(date) => setDayModal(date)}
                   onMealPress={handleMealPress}
                   onAddMeal={handleAddMeal}
                 />
@@ -301,8 +316,9 @@ export default function CalendarScreen() {
                 <CalendarMonthView
                   year={monthYear}
                   month={monthIndex}
-                  mealPlans={mealPlans}
-                  onDayPress={(date) => handleAddMeal(date, 'dinner')}
+                  mealPlans={showMeals ? mealPlans : []}
+                  todos={showTodos ? todos : []}
+                  onDayPress={(date) => setDayModal(date)}
                   onAddMeal={handleAddMeal}
                 />
               )}
@@ -356,10 +372,10 @@ export default function CalendarScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.modalBody}>
+          <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
             <Text style={styles.modalLabel}>タスク名 *</Text>
             <TextInput
-              style={styles.searchInput}
+              style={styles.todoInput}
               value={todoTitle}
               onChangeText={setTodoTitle}
               placeholder="例: 買い物に行く"
@@ -367,15 +383,14 @@ export default function CalendarScreen() {
               autoFocus
             />
             <Text style={styles.modalLabel}>期限 (任意)</Text>
-            <TextInput
-              style={styles.searchInput}
-              value={todoDueDate}
-              onChangeText={setTodoDueDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="numbers-and-punctuation"
-            />
-          </View>
+            <DatePickerField value={todoDueDate} onChange={setTodoDueDate} placeholder="期限なし" />
+            {todoDueDate ? (
+              <TouchableOpacity onPress={() => setTodoDueDate('')}>
+                <Text style={styles.clearDate}>期限をクリア</Text>
+              </TouchableOpacity>
+            ) : null}
+            <View style={{ height: 40 }} />
+          </ScrollView>
         </View>
       </Modal>
 
@@ -456,6 +471,54 @@ export default function CalendarScreen() {
               </Text>
             }
           />
+        </View>
+      </Modal>
+
+      {/* Day Modal */}
+      <Modal visible={!!dayModal} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modal}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setDayModal(null)}>
+              <Text style={styles.modalCancel}>閉じる</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{dayModal}</Text>
+            <View style={{ width: 60 }} />
+          </View>
+          <ScrollView style={styles.modalBody}>
+            {MEAL_TYPE_ORDER.map(mealType => {
+              const plan = dayModal ? mealPlans.find(p => p.date === dayModal && p.meal_type === mealType) : undefined;
+              return (
+                <View key={mealType} style={styles.dayModalSlot}>
+                  <Text style={styles.dayModalMealType}>{MEAL_TYPE_LABELS[mealType]}</Text>
+                  {plan ? (
+                    <View style={styles.dayModalPlanRow}>
+                      <Text style={styles.dayModalDishName}>{plan.dish_name}</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert('削除確認', `「${plan.dish_name}」を削除しますか？`, [
+                            { text: 'キャンセル', style: 'cancel' },
+                            { text: '削除', style: 'destructive', onPress: async () => {
+                              try { await removeMealPlan(plan.id); } catch (e: any) { Alert.alert('エラー', e.message); }
+                            }},
+                          ]);
+                        }}
+                        hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                      >
+                        <Text style={styles.dayModalDelete}>削除</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.dayModalAdd}
+                      onPress={() => { setDayModal(null); dayModal && handleAddMeal(dayModal, mealType); }}
+                    >
+                      <Text style={styles.dayModalAddText}>+ 追加</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
         </View>
       </Modal>
 
@@ -557,6 +620,13 @@ const styles = StyleSheet.create({
   navBtn: { padding: 8 },
   navBtnText: { fontSize: 16, color: Colors.primary, fontWeight: '700' },
   periodLabel: { fontSize: 16, fontWeight: '600', color: Colors.text, flex: 1, textAlign: 'center' },
+  switchRow: {
+    flexDirection: 'row', alignItems: 'center', marginTop: 8,
+    backgroundColor: Colors.surface, borderRadius: 8,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 12, paddingVertical: 6,
+  },
+  switchLabel: { fontSize: 14, color: Colors.text, fontWeight: '600' },
   calendarPanel: { flex: 1, minHeight: 0, marginTop: 8 },
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
@@ -607,4 +677,16 @@ const styles = StyleSheet.create({
   detailUrl: { fontSize: 13, color: Colors.primary, marginTop: 8 },
   deleteBtn: { marginTop: 20, backgroundColor: Colors.accent, padding: 12, borderRadius: 8, alignItems: 'center' },
   deleteBtnText: { color: Colors.primaryDark, fontWeight: '600', fontSize: 16 },
+  dayModalSlot: {
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  dayModalMealType: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginBottom: 8 },
+  dayModalPlanRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dayModalDishName: { fontSize: 16, color: Colors.text, fontWeight: '600', flex: 1 },
+  dayModalDelete: { fontSize: 14, color: Colors.error, fontWeight: '700', marginLeft: 12 },
+  dayModalAdd: {
+    borderWidth: 1, borderColor: Colors.border, borderStyle: 'dashed',
+    borderRadius: 8, paddingVertical: 10, alignItems: 'center',
+  },
+  dayModalAddText: { fontSize: 14, color: Colors.textSecondary },
 });

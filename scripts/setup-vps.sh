@@ -4,11 +4,11 @@
 
 set -e
 
-echo "🫒 Olive VPS セットアップ開始..."
+echo "Olive VPS セットアップ開始..."
 
 # Docker インストール
 if ! command -v docker &>/dev/null; then
-  echo "📦 Docker をインストール中..."
+  echo "Docker をインストール中..."
   apt-get update -q
   apt-get install -y ca-certificates curl gnupg
   install -m 0755 -d /etc/apt/keyrings
@@ -23,14 +23,14 @@ if ! command -v docker &>/dev/null; then
   apt-get update -q
   apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
   systemctl enable --now docker
-  echo "✅ Docker インストール完了"
+  echo "Docker インストール完了"
 else
-  echo "✅ Docker は既にインストール済み"
+  echo "Docker は既にインストール済み"
 fi
 
 # デプロイディレクトリ作成
 mkdir -p /app/olive
-echo "✅ /app/olive ディレクトリ作成完了"
+echo " /app/olive ディレクトリ作成完了"
 
 # ファイアウォール設定 (ufw がある場合)
 if command -v ufw &>/dev/null; then
@@ -38,11 +38,11 @@ if command -v ufw &>/dev/null; then
   ufw allow 80/tcp   # HTTP
   ufw allow 443/tcp  # HTTPS (将来用)
   ufw --force enable
-  echo "✅ ufw ファイアウォール設定完了"
+  echo " ufw ファイアウォール設定完了"
 fi
 
 echo ""
-echo "✅ VPS セットアップ完了!"
+echo "VPS セットアップ完了!"
 echo ""
 echo "次のステップ:"
 echo "  1. DNS設定: olive.eclo.info の A レコードをこのVPSのIPアドレスに向ける"

@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
-import { MealPlan, MealType, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '../types';
+import { MealPlan, MealType, Todo, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '../types';
 import { Colors } from './Colors';
 import { MealTypeTag } from './MealTypeTag';
 
 interface Props {
   weekStart: Date;
   mealPlans: MealPlan[];
+  todos?: Todo[];
   onDayPress: (date: string) => void;
   onMealPress: (plan: MealPlan) => void;
   onAddMeal: (date: string, mealType: MealType) => void;
@@ -32,7 +33,7 @@ function getWeekDays(weekStart: Date): Date[] {
 
 const DAY_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
 
-export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal }: Props) {
+export function CalendarWeekView({ weekStart, mealPlans, todos = [], onDayPress, onMealPress, onAddMeal }: Props) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
   const days = getWeekDays(weekStart);
@@ -49,8 +50,10 @@ export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal 
         const isToday = dateStr === today;
         const dayPlans = mealPlans.filter(p => p.date === dateStr);
 
+        const dayTodos = todos.filter(t => t.due_date === dateStr && !t.done);
+
         return (
-          <View key={dateStr} style={[styles.dayRow, isDesktop && styles.dayRowDesktop]}>
+          <TouchableOpacity key={dateStr} style={[styles.dayRow, isDesktop && styles.dayRowDesktop]} onPress={() => onDayPress(dateStr)} activeOpacity={0.85}>
             <View style={[styles.dayHeader, isToday && styles.todayHeader]}>
               <Text style={[styles.dayLabel, isToday && styles.todayLabel]}>
                 {DAY_LABELS[idx]}
@@ -89,8 +92,15 @@ export function CalendarWeekView({ weekStart, mealPlans, onMealPress, onAddMeal 
                   </View>
                 );
               })}
+              {dayTodos.length > 0 && (
+                <View style={styles.todoSlot}>
+                  {dayTodos.map(t => (
+                    <Text key={t.id} style={styles.todoChip} numberOfLines={1}>📋 {t.title}</Text>
+                  ))}
+                </View>
+              )}
             </View>
-          </View>
+          </TouchableOpacity>
         );
       })}
     </ScrollView>
@@ -144,6 +154,8 @@ const styles = StyleSheet.create({
     maxWidth: 220,
   },
   mealChipText: { fontSize: 14, fontWeight: '500', color: Colors.text },
+  todoSlot: { marginTop: 6, gap: 2 },
+  todoChip: { fontSize: 12, color: Colors.textSecondary, paddingVertical: 2 },
   addButton: {
     paddingHorizontal: 10,
     paddingVertical: 6,

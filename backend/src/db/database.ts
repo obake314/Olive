@@ -243,7 +243,7 @@ const DEFAULT_DISHES: DefaultDish[] = [
     ingredients: [{ name: 'ほうれん草', quantity: 200, unit: 'g' }, { name: 'すりごま', quantity: 2, unit: '大さじ' }, { name: '砂糖', quantity: 1, unit: '大さじ' }, { name: 'しょうゆ', quantity: 1, unit: '大さじ' }, { name: 'みりん', quantity: 1, unit: '大さじ' }],
   },
   {
-    name: '卵焼き/だし巻き卵',
+    name: '卵焼き',
     image_file: 'tamagoyaki.jpg',
     recipe_text: '1. 卵3個をよく溶き、だし汁・砂糖・塩・しょうゆを加えて混ぜる。\n2. 卵焼き器に油をなじませ、卵液の1/3を流し入れる。\n3. 半熟になったら手前に巻く。\n4. 油を塗って奥に寄せ、残りの卵液を2回に分けて同様に巻く。\n5. 巻きすで形を整えて冷ます。',
     ingredients: [{ name: '卵', quantity: 3, unit: '個' }, { name: 'だし汁', quantity: 3, unit: '大さじ' }, { name: '砂糖', quantity: 1, unit: '大さじ' }, { name: 'しょうゆ', quantity: 0.5, unit: '小さじ' }, { name: '塩', quantity: 0, unit: 'ひとつまみ' }, { name: 'サラダ油', quantity: 1, unit: '大さじ' }],
@@ -321,40 +321,10 @@ const DEFAULT_DISHES: DefaultDish[] = [
     ingredients: [{ name: 'うどん', quantity: 2, unit: '玉' }, { name: 'だし汁', quantity: 600, unit: 'ml' }, { name: 'しょうゆ', quantity: 2, unit: '大さじ' }, { name: 'みりん', quantity: 2, unit: '大さじ' }, { name: 'かまぼこ', quantity: 4, unit: '枚' }, { name: '長ねぎ', quantity: 1, unit: '本' }],
   },
   {
-    name: '蕎麦',
-    image_file: 'soba.jpg',
-    recipe_text: '1. だし汁・しょうゆ・みりんでそばつゆを作る。\n2. そばを袋の表示通り茹でて冷水でしめる。\n3. 器にそばを盛り、つゆを注ぐ（温・冷はお好みで）。\n4. 薬味（ねぎ・わさび）を添える。',
-    ingredients: [{ name: 'そば', quantity: 2, unit: '玉' }, { name: 'だし汁', quantity: 600, unit: 'ml' }, { name: 'しょうゆ', quantity: 3, unit: '大さじ' }, { name: 'みりん', quantity: 2, unit: '大さじ' }, { name: 'ねぎ', quantity: 1, unit: '本' }, { name: 'わさび', quantity: 0, unit: '適量' }],
-  },
-  {
     name: '丼物',
     image_file: 'oyakodon.jpg',
     recipe_text: '1. だし汁・しょうゆ・みりん・砂糖で割り下を作る。\n2. 親子丼の場合：鶏もも肉と玉ねぎを割り下で煮て、溶き卵でとじる。\n3. ご飯を丼に盛り、具材をのせる。\n4. 三つ葉を散らして完成。',
     ingredients: [{ name: 'ご飯', quantity: 2, unit: '膳' }, { name: '鶏もも肉', quantity: 200, unit: 'g' }, { name: '玉ねぎ', quantity: 1, unit: '個' }, { name: '卵', quantity: 3, unit: '個' }, { name: 'だし汁', quantity: 200, unit: 'ml' }, { name: 'しょうゆ', quantity: 2, unit: '大さじ' }, { name: 'みりん', quantity: 2, unit: '大さじ' }, { name: '砂糖', quantity: 1, unit: '大さじ' }],
-  },
-  {
-    name: 'たこ焼き',
-    image_file: 'takoyaki.jpg',
-    recipe_text: '1. 小麦粉・だし汁・卵・薄口しょうゆで生地を作る。\n2. たこ焼き器を熱して油を塗り、生地を流し込む。\n3. タコ・ねぎ・紅生姜・天かすを入れる。\n4. 生地が固まりかけたら竹串で回して丸くする。\n5. ソース・マヨネーズ・青のり・かつお節をかける。',
-    ingredients: [{ name: '小麦粉', quantity: 150, unit: 'g' }, { name: 'だし汁', quantity: 400, unit: 'ml' }, { name: '卵', quantity: 2, unit: '個' }, { name: 'ゆでタコ', quantity: 150, unit: 'g' }, { name: '長ねぎ', quantity: 1, unit: '本' }, { name: '紅生姜', quantity: 20, unit: 'g' }, { name: '天かす', quantity: 20, unit: 'g' }],
-  },
-  {
-    name: '寿司',
-    image_file: undefined,
-    recipe_text: '1. ご飯を炊き、すし酢（酢・砂糖・塩）を混ぜて切るように合わせる。\n2. シャリを手のひらに乗せ、ネタをのせて形を整える。\n3. ネタはマグロ・サーモン・えびなど好みで。\n4. わさび・しょうゆを添えて盛り付ける。',
-    ingredients: [{ name: 'ご飯', quantity: 2, unit: '合' }, { name: '酢', quantity: 4, unit: '大さじ' }, { name: '砂糖', quantity: 2, unit: '大さじ' }, { name: '塩', quantity: 1, unit: '小さじ' }, { name: 'マグロ', quantity: 100, unit: 'g' }, { name: 'サーモン', quantity: 100, unit: 'g' }, { name: 'えび', quantity: 8, unit: '尾' }],
-  },
-  {
-    name: '刺身',
-    image_file: undefined,
-    recipe_text: '1. 新鮮な魚を柵で用意する。\n2. 皮がある場合は引く。\n3. 包丁を斜めに入れて、厚さ5〜7mmに切る。\n4. 大葉・大根のけん・わさびを盛り付ける。\n5. しょうゆを添えて完成。',
-    ingredients: [{ name: 'マグロ（柵）', quantity: 150, unit: 'g' }, { name: 'サーモン（柵）', quantity: 150, unit: 'g' }, { name: '大葉', quantity: 6, unit: '枚' }, { name: '大根', quantity: 100, unit: 'g' }, { name: 'わさび', quantity: 0, unit: '適量' }, { name: 'しょうゆ', quantity: 0, unit: '適量' }],
-  },
-  {
-    name: '豆腐',
-    image_file: undefined,
-    recipe_text: '1. 豆腐はキッチンペーパーで包み、軽く水切りする。\n2. 食べやすい大きさに切って器に盛る。\n3. しょうが・みょうが・ねぎなど薬味をのせる。\n4. しょうゆをかけて完成（冷奴の場合はそのまま）。',
-    ingredients: [{ name: '絹ごし豆腐', quantity: 1, unit: '丁' }, { name: 'しょうが', quantity: 1, unit: 'かけ' }, { name: 'ねぎ', quantity: 1, unit: '本' }, { name: 'しょうゆ', quantity: 0, unit: '適量' }],
   },
 ];
 
