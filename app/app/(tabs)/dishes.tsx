@@ -215,7 +215,9 @@ export default function DishesScreen() {
                   <TouchableOpacity style={styles.card} onPress={() => openEdit(item)}>
                     {item.image_data ? (
                       <Image source={{ uri: item.image_data }} style={styles.cardImage} resizeMode="cover" />
-                    ) : null}
+                    ) : (
+                      <View style={styles.cardImagePlaceholder} />
+                    )}
                     <View style={styles.cardBody}>
                       <View style={styles.cardHeader}>
                         <Text style={styles.cardName}>{item.name}</Text>
@@ -402,12 +404,14 @@ const styles = StyleSheet.create({
   cardWrapDesktop: { flex: 1 },
   cardWrapWide: { flex: 1 },
   card: {
-    backgroundColor: Colors.surface, borderRadius: 8, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4,
-    elevation: 2, borderWidth: 1, borderColor: Colors.border, minHeight: 120,
+    backgroundColor: Colors.surface, borderRadius: 10, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4,
+    elevation: 2, borderWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'stretch',
   },
-  cardImage: { width: '100%', height: 140 },
-  cardBody: { padding: 14 },
+  cardImage: { width: 90, height: 90 },
+  cardImagePlaceholder: { width: 90, height: 90, backgroundColor: Colors.background },
+  cardBody: { flex: 1, padding: 12, justifyContent: 'center' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardName: { fontSize: 16, fontWeight: '700', color: Colors.text, flex: 1 },
   deleteIcon: { fontSize: 13, color: Colors.primaryDark, fontWeight: '700' },
