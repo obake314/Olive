@@ -1,4 +1,4 @@
-import { Dish, Ingredient, MealPlan, MealType, ShoppingItem, Todo, Family, FamilyMember } from '../types';
+import { Dish, Ingredient, MealPlan, MealType, ShoppingItem, Todo, WishlistItem, Family, FamilyMember } from '../types';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || '/api';
 
@@ -69,7 +69,7 @@ export const dishesApi = {
 // Recipe Extract
 export const recipeApi = {
   extract: (url: string) =>
-    request<{ name: string; recipe_text: string; ingredients: { name: string; quantity: number; unit: string }[] }>(
+    request<{ name: string; description: string; recipe_text: string; ingredients: { name: string; quantity: number; unit: string }[] }>(
       '/recipes/extract',
       { method: 'POST', body: JSON.stringify({ url }) }
     ),
@@ -89,10 +89,10 @@ export const mealPlansApi = {
 // Todos
 export const todosApi = {
   list: () => request<Todo[]>('/todos'),
-  create: (data: { title: string; due_date?: string; assignee_id?: string }) =>
+  create: (data: { title: string; note?: string; due_date?: string; assignee_id?: string }) =>
     request<Todo>('/todos', { method: 'POST', body: JSON.stringify(data) }),
   toggle: (id: string) => request<Todo>(`/todos/${id}/toggle`, { method: 'PATCH' }),
-  update: (id: string, data: { title: string; due_date?: string; assignee_id?: string }) =>
+  update: (id: string, data: { title: string; note?: string; due_date?: string; assignee_id?: string }) =>
     request<Todo>(`/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/todos/${id}`, { method: 'DELETE' }),
 };
@@ -113,11 +113,21 @@ export const shoppingApi = {
       method: 'POST',
       body: JSON.stringify({ week_start: weekStart }),
     }),
-  addCustom: (data: { week_start: string; name: string; quantity?: number; unit?: string }) =>
+  addCustom: (data: { week_start: string; name: string; quantity?: number; unit?: string; note?: string }) =>
     request<ShoppingItem>('/shopping', { method: 'POST', body: JSON.stringify(data) }),
   toggleCheck: (id: string) =>
     request<ShoppingItem>(`/shopping/${id}/check`, { method: 'PATCH' }),
-  update: (id: string, data: { name: string; quantity?: number; unit?: string }) =>
+  update: (id: string, data: { name: string; quantity?: number; unit?: string; note?: string }) =>
     request<ShoppingItem>(`/shopping/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/shopping/${id}`, { method: 'DELETE' }),
+};
+
+// Wishlists
+export const wishlistsApi = {
+  list: () => request<WishlistItem[]>('/wishlists'),
+  create: (data: { name: string; memo?: string; url?: string }) =>
+    request<WishlistItem>('/wishlists', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: { name: string; memo?: string; url?: string }) =>
+    request<WishlistItem>(`/wishlists/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => request<void>(`/wishlists/${id}`, { method: 'DELETE' }),
 };

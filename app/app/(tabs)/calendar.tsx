@@ -11,7 +11,7 @@ import { CalendarMonthView } from '../../src/components/CalendarMonthView';
 import { LoadingView } from '../../src/components/LoadingView';
 import { useMealPlans } from '../../src/hooks/useMealPlans';
 import { useDishes } from '../../src/hooks/useDishes';
-import { MealPlan, MealType, Todo, MEAL_TYPE_LABELS } from '../../src/types';
+import { MealPlan, MealType, Todo, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '../../src/types';
 import { MealTypeTag } from '../../src/components/MealTypeTag';
 import { todosApi } from '../../src/api/client';
 

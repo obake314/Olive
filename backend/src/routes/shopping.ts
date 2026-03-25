@@ -116,14 +116,14 @@ router.post('/generate', (req: AuthRequest, res: Response) => {
 
 // POST /shopping - Add custom item
 router.post('/', (req: AuthRequest, res: Response) => {
-  const { week_start, name, quantity, unit } = req.body;
+  const { week_start, name, quantity, unit, note } = req.body;
   if (!week_start || !name) return res.status(400).json({ error: 'week_start and name are required' });
 
   const db = getDb();
   const id = uuidv4();
   db.prepare(
-    'INSERT INTO shopping_items (id, user_id, week_start, name, quantity, unit, checked, custom) VALUES (?, ?, ?, ?, ?, ?, 0, 1)'
-  ).run(id, req.userId, week_start, name, quantity || 0, unit || '');
+    'INSERT INTO shopping_items (id, user_id, week_start, name, quantity, unit, note, checked, custom) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1)'
+  ).run(id, req.userId, week_start, name, quantity || 0, unit || '', note || null);
 
   const item = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(id);
   res.status(201).json(item);
@@ -143,17 +143,17 @@ router.patch('/:id/check', (req: AuthRequest, res: Response) => {
   res.json(updated);
 });
 
-// PUT /shopping/:id - Edit item name/quantity/unit
+// PUT /shopping/:id - Edit item name/quantity/unit/note
 router.put('/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
   const item = db.prepare('SELECT * FROM shopping_items WHERE id = ? AND user_id = ?').get(req.params.id, req.userId) as any;
   if (!item) return res.status(404).json({ error: 'Not found' });
 
-  const { name, quantity, unit } = req.body;
+  const { name, quantity, unit, note } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
-  db.prepare('UPDATE shopping_items SET name = ?, quantity = ?, unit = ? WHERE id = ?')
-    .run(name, quantity ?? item.quantity, unit ?? item.unit, req.params.id);
+  db.prepare('UPDATE shopping_items SET name = ?, quantity = ?, unit = ?, note = ? WHERE id = ?')
+    .run(name, quantity ?? item.quantity, unit ?? item.unit, note ?? item.note, req.params.id);
   const updated = db.prepare('SELECT * FROM shopping_items WHERE id = ?').get(req.params.id);
   res.json(updated);
 });
@@ -161,6 +161,11 @@ router.put('/:id', (req: AuthRequest, res: Response) => {
 // DELETE /shopping/:id
 router.delete('/:id', (req: AuthRequest, res: Response) => {
   const db = getDb();
+  // auto アイテムは id が "auto_" で始まる仮想アイテムなので DB には存在しない
+  if (req.params.id.startsWith('auto_')) {
+    res.status(204).send();
+    return;
+  }
   const result = db.prepare('DELETE FROM shopping_items WHERE id = ? AND user_id = ?').run(req.params.id, req.userId);
   if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
   res.status(204).send();

@@ -9,7 +9,8 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../src/components/Colors';
 import { useAuth } from '../../src/context/AuthContext';
-import FamilyScreen from './family';
+import { familyApi } from '../../src/api/client';
+import { Family, FamilyMember } from '../../src/types';
 
 async function pickAvatar(): Promise<string | undefined> {
   if (Platform.OS !== 'web') {
@@ -46,6 +47,56 @@ function SettingsModal({ visible, onClose, onLogout }: {
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+
+  // Family state
+  const [family, setFamily] = useState<Family | null>(null);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [familyName, setFamilyName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [creatingFamily, setCreatingFamily] = useState(false);
+  const [inviting, setInviting] = useState(false);
+
+  React.useEffect(() => {
+    if (visible) {
+      familyApi.get().then(d => { setFamily(d.family); setMembers(d.members); }).catch(() => {});
+    }
+  }, [visible]);
+
+  const handleCreateFamily = async () => {
+    if (!familyName.trim()) return;
+    setCreatingFamily(true);
+    try {
+      await familyApi.create(familyName.trim());
+      setFamilyName('');
+      const d = await familyApi.get();
+      setFamily(d.family); setMembers(d.members);
+    } catch (e: any) { Alert.alert('エラー', e.message); }
+    finally { setCreatingFamily(false); }
+  };
+
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      const res = await familyApi.invite(inviteEmail.trim());
+      Alert.alert('送信完了', res.message);
+      setInviteEmail('');
+    } catch (e: any) { Alert.alert('エラー', e.message); }
+    finally { setInviting(false); }
+  };
+
+  const handleLeaveFamily = () => {
+    Alert.alert('グループから離脱', '家族グループから離脱しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      { text: '離脱する', style: 'destructive', onPress: async () => {
+        try {
+          await familyApi.leave();
+          const d = await familyApi.get();
+          setFamily(d.family); setMembers(d.members);
+        } catch (e: any) { Alert.alert('エラー', e.message); }
+      }},
+    ]);
+  };
 
   const openProfileEdit = () => {
     setEditName(user?.name ?? '');
@@ -210,7 +261,69 @@ function SettingsModal({ visible, onClose, onLogout }: {
           {/* 家族設定 */}
           <View style={styles.settingsSection}>
             <Text style={styles.settingsSectionTitle}>家族設定</Text>
-            <FamilyScreen />
+            {!family ? (
+              <View style={styles.familyBlock}>
+                <Text style={styles.familyDesc}>グループを作成して家族を招待すると、献立・TODO・料理を共有できます。</Text>
+                <TextInput
+                  style={styles.settingsInput}
+                  value={familyName}
+                  onChangeText={setFamilyName}
+                  placeholder="グループ名 (例: 岡崎家)"
+                  placeholderTextColor={Colors.textSecondary}
+                />
+                <TouchableOpacity
+                  style={[styles.familyBtn, creatingFamily && styles.disabled]}
+                  onPress={handleCreateFamily} disabled={creatingFamily}
+                >
+                  <Text style={styles.familyBtnText}>{creatingFamily ? '作成中...' : 'グループを作成'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={styles.familyBlock}>
+                  <View style={styles.familyHeaderRow}>
+                    <Text style={styles.familyName}>{family.name}</Text>
+                    <TouchableOpacity onPress={handleLeaveFamily}>
+                      <Text style={styles.leaveText}>離脱</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {members.map(m => (
+                    <View key={m.id} style={styles.memberRow}>
+                      <View style={styles.memberAvatar}>
+                        <Text style={styles.memberAvatarText}>{m.name.charAt(0)}</Text>
+                      </View>
+                      <View style={styles.memberInfo}>
+                        <Text style={styles.memberName}>{m.name}{m.id === user?.id ? ' (あなた)' : ''}</Text>
+                        <Text style={styles.memberEmail}>{m.email}</Text>
+                      </View>
+                      {m.status === 'pending' && (
+                        <View style={styles.pendingBadge}>
+                          <Text style={styles.pendingText}>招待中</Text>
+                        </View>
+                      )}
+                    </View>
+                  ))}
+                </View>
+                <View style={[styles.familyBlock, styles.familyBlockBorder]}>
+                  <Text style={styles.familyDesc}>メールアドレスに招待リンクを送信します。</Text>
+                  <TextInput
+                    style={styles.settingsInput}
+                    value={inviteEmail}
+                    onChangeText={setInviteEmail}
+                    placeholder="family@example.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholderTextColor={Colors.textSecondary}
+                  />
+                  <TouchableOpacity
+                    style={[styles.familyBtn, inviting && styles.disabled]}
+                    onPress={handleInvite} disabled={inviting}
+                  >
+                    <Text style={styles.familyBtnText}>{inviting ? '送信中...' : '招待メールを送る'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
           <View style={{ height: 40 }} />
         </ScrollView>
@@ -223,8 +336,8 @@ export default function TabLayout() {
   const { logout } = useAuth();
   const [settingsVisible, setSettingsVisible] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.replace('/login');
   };
 
@@ -381,4 +494,28 @@ const styles = StyleSheet.create({
   },
   logoutBtnText: { color: Colors.error, fontWeight: '700', fontSize: 15 },
   disabled: { opacity: 0.4 },
+  familyBlock: { paddingHorizontal: 16, paddingBottom: 14, paddingTop: 4 },
+  familyBlockBorder: { borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 14 },
+  familyHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  familyName: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  familyDesc: { fontSize: 14, color: Colors.textSecondary, marginBottom: 10, lineHeight: 20 },
+  familyBtn: { backgroundColor: Colors.primary, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
+  familyBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  settingsInput: {
+    backgroundColor: Colors.background, borderRadius: 8,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: Colors.text, marginBottom: 10,
+  },
+  leaveText: { fontSize: 14, color: Colors.error, fontWeight: '600' },
+  memberRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10 },
+  memberAvatar: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center',
+  },
+  memberAvatarText: { fontSize: 14, fontWeight: '700', color: Colors.primaryDark },
+  memberInfo: { flex: 1 },
+  memberName: { fontSize: 15, fontWeight: '600', color: Colors.text },
+  memberEmail: { fontSize: 12, color: Colors.textSecondary },
+  pendingBadge: { backgroundColor: Colors.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  pendingText: { fontSize: 12, color: Colors.primaryDark, fontWeight: '600' },
 });

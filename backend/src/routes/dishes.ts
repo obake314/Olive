@@ -75,7 +75,7 @@ router.get('/:id', (req: AuthRequest, res: Response) => {
 
 // POST /dishes
 router.post('/', async (req: AuthRequest, res: Response) => {
-  const { name, recipe_url, recipe_text, image_data, tags = [], ingredients = [] } = req.body;
+  const { name, description, recipe_url, recipe_text, recipe_memo, image_data, tags = [], ingredients = [] } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   let processedImage: string | null = null;
@@ -87,8 +87,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   const db = getDb();
   const id = uuidv4();
   const tagsStr = Array.isArray(tags) ? tags.join(',') : '';
-  db.prepare('INSERT INTO dishes (id, user_id, name, recipe_url, recipe_text, image_data, tags) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
-    id, req.userId, name, recipe_url || null, recipe_text || null, processedImage, tagsStr
+  db.prepare('INSERT INTO dishes (id, user_id, name, description, recipe_url, recipe_text, recipe_memo, image_data, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    id, req.userId, name, description || null, recipe_url || null, recipe_text || null, recipe_memo || null, processedImage, tagsStr
   );
 
   const insertIngredient = db.prepare(
@@ -112,7 +112,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   const existing = db.prepare('SELECT * FROM dishes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
-  const { name, recipe_url, recipe_text, image_data, tags, ingredients } = req.body;
+  const { name, description, recipe_url, recipe_text, recipe_memo, image_data, tags, ingredients } = req.body;
 
   let processedImage = (existing as any).image_data;
   if (image_data !== undefined) {
@@ -128,10 +128,12 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
     ? (Array.isArray(tags) ? tags.join(',') : '')
     : (existing as any).tags ?? '';
 
-  db.prepare('UPDATE dishes SET name = ?, recipe_url = ?, recipe_text = ?, image_data = ?, tags = ? WHERE id = ?').run(
+  db.prepare('UPDATE dishes SET name = ?, description = ?, recipe_url = ?, recipe_text = ?, recipe_memo = ?, image_data = ?, tags = ? WHERE id = ?').run(
     name ?? (existing as any).name,
+    description !== undefined ? description : (existing as any).description,
     recipe_url !== undefined ? recipe_url : (existing as any).recipe_url,
     recipe_text !== undefined ? recipe_text : (existing as any).recipe_text,
+    recipe_memo !== undefined ? recipe_memo : (existing as any).recipe_memo,
     processedImage,
     tagsStr,
     req.params.id

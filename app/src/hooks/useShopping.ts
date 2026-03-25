@@ -27,8 +27,8 @@ export function useShopping(weekStart: string) {
     setItems(data);
   };
 
-  const addCustom = async (name: string, quantity?: number, unit?: string) => {
-    const item = await shoppingApi.addCustom({ week_start: weekStart, name, quantity, unit });
+  const addCustom = async (name: string, quantity?: number, unit?: string, note?: string) => {
+    const item = await shoppingApi.addCustom({ week_start: weekStart, name, quantity, unit, note });
     setItems(prev => [...prev, item]);
   };
 
@@ -52,7 +52,7 @@ export function useShopping(weekStart: string) {
     setItems(prev => prev.map(i => i.id === id ? updated : i));
   };
 
-  const updateItem = async (id: string, data: { name: string; quantity?: number; unit?: string }) => {
+  const updateItem = async (id: string, data: { name: string; quantity?: number; unit?: string; note?: string }) => {
     const updated = await shoppingApi.update(id, data);
     setItems(prev => prev.map(i => i.id === id ? updated : i));
   };

@@ -11,8 +11,10 @@ export interface Ingredient {
 export interface Dish {
   id: string;
   name: string;
+  description?: string;
   recipe_url?: string;
   recipe_text?: string;
+  recipe_memo?: string;
   image_data?: string;
   tags: string[];
   created_at: string;
@@ -35,6 +37,7 @@ export interface ShoppingItem {
   name: string;
   quantity: number;
   unit: string;
+  note?: string;
   checked: number;
   custom: number;
   auto?: boolean;
@@ -55,11 +58,21 @@ export interface Family {
 export interface Todo {
   id: string;
   title: string;
+  note?: string;
   done: number;
   due_date?: string;
   created_at: string;
   assignee_id?: string;
   assignee_name?: string;
+  created_by_name?: string;
+}
+
+export interface WishlistItem {
+  id: string;
+  name: string;
+  memo?: string;
+  url?: string;
+  created_at: string;
   created_by_name?: string;
 }
 

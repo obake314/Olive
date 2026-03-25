@@ -62,7 +62,7 @@ export default function HomeScreen() {
             <Text style={styles.sectionLink}>カレンダーへ →</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.todayRow}>
+        <View style={styles.todayStack}>
           {todayMeals.map(({ type, plan }) => (
             <TouchableOpacity
               key={type}
@@ -71,7 +71,7 @@ export default function HomeScreen() {
             >
               <Text style={styles.todayMealType}>{MEAL_TYPE_LABELS[type]}</Text>
               {plan ? (
-                <Text style={styles.todayDishName} numberOfLines={2}>{plan.dish_name}</Text>
+                <Text style={styles.todayDishName} numberOfLines={1}>{plan.dish_name}</Text>
               ) : (
                 <Text style={styles.todayEmpty}>未設定</Text>
               )}
@@ -149,14 +149,15 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
   sectionLink: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
-  todayRow: { flexDirection: 'row', gap: 8 },
+  todayStack: { gap: 6 },
   todayCard: {
-    flex: 1, backgroundColor: Colors.background, borderRadius: 8,
-    borderWidth: 1, borderColor: Colors.border, padding: 10, minHeight: 64, justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.background, borderRadius: 8,
+    borderWidth: 1, borderColor: Colors.border, padding: 10, minHeight: 44, gap: 10,
   },
-  todayMealType: { fontSize: 11, color: Colors.textSecondary, fontWeight: '600', marginBottom: 4 },
-  todayDishName: { fontSize: 14, color: Colors.text, fontWeight: '600' },
-  todayEmpty: { fontSize: 13, color: Colors.border, fontStyle: 'italic' },
+  todayMealType: { fontSize: 12, color: Colors.textSecondary, fontWeight: '600', width: 28 },
+  todayDishName: { flex: 1, fontSize: 14, color: Colors.text, fontWeight: '600' },
+  todayEmpty: { flex: 1, fontSize: 13, color: Colors.border, fontStyle: 'italic' },
   menuGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   menuCard: {
     flexBasis: '47%', flexGrow: 1,

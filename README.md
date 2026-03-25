@@ -95,6 +95,6 @@ EXPO_PUBLIC_API_URL=http://localhost:3000
 |---|---|---|
 | GET | `/shopping?week_start=` | 週の一覧取得 |
 | POST | `/shopping/generate` | 献立から自動生成 |
-| POST | `/shopping` | カスタムアイテム追加 |
+| POST | `/shopping` | カスタム追加 |
 | PATCH | `/shopping/:id/check` | チェック切り替え |
 | DELETE | `/shopping/:id` | 削除 |

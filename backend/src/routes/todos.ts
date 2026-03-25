@@ -27,12 +27,12 @@ router.get('/', (req: AuthRequest, res: Response) => {
 
 // POST /todos
 router.post('/', (req: AuthRequest, res: Response) => {
-  const { title, due_date, assignee_id } = req.body;
+  const { title, note, due_date, assignee_id } = req.body;
   if (!title?.trim()) return res.status(400).json({ error: 'タイトルは必須です' }) as any;
   const db = getDb();
   const id = uuidv4();
-  db.prepare('INSERT INTO todos (id, user_id, title, due_date, assignee_id) VALUES (?, ?, ?, ?, ?)').run(
-    id, req.userId, title.trim(), due_date || null, assignee_id || null
+  db.prepare('INSERT INTO todos (id, user_id, title, note, due_date, assignee_id) VALUES (?, ?, ?, ?, ?, ?)').run(
+    id, req.userId, title.trim(), note || null, due_date || null, assignee_id || null
   );
   const todo = db.prepare(`${TODO_SELECT} WHERE t.id = ?`).get(id);
   res.status(201).json(todo);
@@ -56,10 +56,10 @@ router.put('/:id', (req: AuthRequest, res: Response) => {
   const ph = userIds.map(() => '?').join(',');
   const todo = db.prepare(`SELECT * FROM todos WHERE id = ? AND user_id IN (${ph})`).get(req.params.id, ...userIds);
   if (!todo) return res.status(404).json({ error: 'Not found' }) as any;
-  const { title, due_date, assignee_id } = req.body;
+  const { title, note, due_date, assignee_id } = req.body;
   if (!title?.trim()) return res.status(400).json({ error: 'タイトルは必須です' }) as any;
-  db.prepare('UPDATE todos SET title = ?, due_date = ?, assignee_id = ? WHERE id = ?').run(
-    title.trim(), due_date || null, assignee_id ?? null, req.params.id
+  db.prepare('UPDATE todos SET title = ?, note = ?, due_date = ?, assignee_id = ? WHERE id = ?').run(
+    title.trim(), note || null, due_date || null, assignee_id ?? null, req.params.id
   );
   res.json(db.prepare(`${TODO_SELECT} WHERE t.id = ?`).get(req.params.id));
 });

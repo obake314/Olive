@@ -8,6 +8,7 @@ import recipeExtractRouter from './routes/recipeExtract';
 import todosRouter from './routes/todos';
 import familyRouter from './routes/family';
 import adminRouter from './routes/admin';
+import wishlistsRouter from './routes/wishlists';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +39,7 @@ app.use('/meal-plans', mealPlansRouter);
 app.use('/shopping', shoppingRouter);
 app.use('/todos', todosRouter);
 app.use('/family', familyRouter);
+app.use('/wishlists', wishlistsRouter);
 app.use('/admin', adminRouter);
 
 app.listen(PORT, () => {

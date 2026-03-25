@@ -146,15 +146,30 @@ function initSchema(): void {
 
     CREATE INDEX IF NOT EXISTS idx_family_members_user ON family_members(user_id);
     CREATE INDEX IF NOT EXISTS idx_family_members_family ON family_members(family_id);
+
+    CREATE TABLE IF NOT EXISTS wishlists (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      memo TEXT,
+      url TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_wishlists_user_id ON wishlists(user_id);
   `);
   // マイグレーション: 既存テーブルにカラム追加
   try { db.exec(`ALTER TABLE dishes ADD COLUMN recipe_text TEXT`); } catch {}
   try { db.exec(`ALTER TABLE dishes ADD COLUMN image_data TEXT`); } catch {}
   try { db.exec(`ALTER TABLE dishes ADD COLUMN tags TEXT NOT NULL DEFAULT ''`); } catch {}
+  try { db.exec(`ALTER TABLE dishes ADD COLUMN description TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE dishes ADD COLUMN recipe_memo TEXT`); } catch {}
   try { db.exec(`ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE todos ADD COLUMN assignee_id TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE todos ADD COLUMN note TEXT`); } catch {}
   try { db.exec(`ALTER TABLE users ADD COLUMN avatar_data TEXT`); } catch {}
   try { db.exec(`ALTER TABLE users ADD COLUMN pending_email TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE shopping_items ADD COLUMN note TEXT`); } catch {}
   // デモアカウントは認証済みにする
   db.exec(`UPDATE users SET email_verified = 1 WHERE email = 'demo@olive.app'`);
 

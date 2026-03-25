@@ -3,13 +3,14 @@ import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
   TextInput, Modal, Alert, useWindowDimensions, ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { DatePickerField } from '../../src/components/DatePickerField';
 import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../src/components/Colors';
 import { LoadingView } from '../../src/components/LoadingView';
 import { EmptyState } from '../../src/components/EmptyState';
-import { todosApi, familyApi } from '../../src/api/client';
-import { Todo, FamilyMember } from '../../src/types';
+import { todosApi, familyApi, wishlistsApi } from '../../src/api/client';
+import { Todo, FamilyMember, WishlistItem } from '../../src/types';
 
 export default function TodoScreen() {
   const { width } = useWindowDimensions();
@@ -18,21 +19,37 @@ export default function TodoScreen() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+
+  // Wishlist state
+  const [wishlists, setWishlists] = useState<WishlistItem[]>([]);
+
+  // Todo modal
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [title, setTitle] = useState('');
+  const [note, setNote] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
+  // Wishlist modal
+  const [wishModalVisible, setWishModalVisible] = useState(false);
+  const [editingWish, setEditingWish] = useState<WishlistItem | null>(null);
+  const [wishName, setWishName] = useState('');
+  const [wishMemo, setWishMemo] = useState('');
+  const [wishUrl, setWishUrl] = useState('');
+  const [wishSaving, setWishSaving] = useState(false);
+
   const reload = useCallback(async () => {
     try {
-      const [data, familyData] = await Promise.all([
+      const [data, familyData, wishData] = await Promise.all([
         todosApi.list(),
         familyApi.get(),
+        wishlistsApi.list(),
       ]);
       setTodos(data);
       setFamilyMembers(familyData.members);
+      setWishlists(wishData);
     } catch (e: any) {
       Alert.alert('エラー', e.message);
     } finally {
@@ -42,9 +59,11 @@ export default function TodoScreen() {
 
   useFocusEffect(useCallback(() => { reload(); }, [reload]));
 
+  // --- Todo handlers ---
   const openAdd = () => {
     setEditingTodo(null);
     setTitle('');
+    setNote('');
     setDueDate('');
     setAssigneeId('');
     setModalVisible(true);
@@ -53,6 +72,7 @@ export default function TodoScreen() {
   const openEdit = (todo: Todo) => {
     setEditingTodo(todo);
     setTitle(todo.title);
+    setNote(todo.note || '');
     setDueDate(todo.due_date || '');
     setAssigneeId(todo.assignee_id || '');
     setModalVisible(true);
@@ -64,6 +84,7 @@ export default function TodoScreen() {
     try {
       const payload = {
         title: title.trim(),
+        note: note.trim() || undefined,
         due_date: dueDate.trim() || undefined,
         assignee_id: assigneeId || undefined,
       };
@@ -111,20 +132,78 @@ export default function TodoScreen() {
     ]);
   };
 
-  const hasFamily = familyMembers.length > 1;
+  // --- Wishlist handlers ---
+  const openAddWish = () => {
+    setEditingWish(null);
+    setWishName('');
+    setWishMemo('');
+    setWishUrl('');
+    setWishModalVisible(true);
+  };
 
+  const openEditWish = (item: WishlistItem) => {
+    setEditingWish(item);
+    setWishName(item.name);
+    setWishMemo(item.memo || '');
+    setWishUrl(item.url || '');
+    setWishModalVisible(true);
+  };
+
+  const handleSaveWish = async () => {
+    if (!wishName.trim()) { Alert.alert('エラー', '名前を入力してください'); return; }
+    setWishSaving(true);
+    try {
+      const payload = {
+        name: wishName.trim(),
+        memo: wishMemo.trim() || undefined,
+        url: wishUrl.trim() || undefined,
+      };
+      if (editingWish) {
+        const updated = await wishlistsApi.update(editingWish.id, payload);
+        setWishlists(prev => prev.map(w => w.id === updated.id ? updated : w));
+      } else {
+        const created = await wishlistsApi.create(payload);
+        setWishlists(prev => [created, ...prev]);
+      }
+      setWishModalVisible(false);
+    } catch (e: any) {
+      Alert.alert('エラー', e.message);
+    } finally {
+      setWishSaving(false);
+    }
+  };
+
+  const handleDeleteWish = (item: WishlistItem) => {
+    Alert.alert('削除確認', `「${item.name}」を削除しますか？`, [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除', style: 'destructive',
+        onPress: async () => {
+          try {
+            await wishlistsApi.delete(item.id);
+            setWishlists(prev => prev.filter(w => w.id !== item.id));
+          } catch (e: any) {
+            Alert.alert('エラー', e.message);
+          }
+        },
+      },
+    ]);
+  };
+
+  const hasFamily = familyMembers.length > 1;
   const pending = todos.filter(t => !t.done);
   const done = todos.filter(t => t.done);
 
-  const renderItem = ({ item }: { item: Todo }) => (
+  const renderTodoItem = ({ item }: { item: Todo }) => (
     <View style={[styles.item, !!item.done && styles.itemDone]}>
-      <TouchableOpacity style={styles.checkbox} onPress={() => handleToggle(item)}>
+      <TouchableOpacity style={styles.checkboxWrap} onPress={() => handleToggle(item)}>
         <View style={[styles.checkboxInner, !!item.done && styles.checkboxChecked]}>
-          {!!item.done && <Text style={styles.checkmark}>✓</Text>}
+          {!!item.done && <Ionicons name="checkmark" size={14} color="#fff" />}
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.itemBody} onPress={() => openEdit(item)}>
+      <View style={styles.itemBody}>
         <Text style={[styles.itemTitle, !!item.done && styles.itemTitleDone]}>{item.title}</Text>
+        {item.note ? <Text style={styles.itemNote}>{item.note}</Text> : null}
         {item.due_date && (
           <Text style={[styles.itemDue, isOverdue(item) && styles.itemDueOverdue]}>
             期限: {item.due_date}
@@ -133,11 +212,71 @@ export default function TodoScreen() {
         {hasFamily && item.assignee_name && (
           <Text style={styles.itemAssignee}>担当: {item.assignee_name}</Text>
         )}
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-        <Text style={styles.deleteText}>削除</Text>
-      </TouchableOpacity>
+      </View>
+      <View style={styles.itemActions}>
+        <TouchableOpacity onPress={() => openEdit(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }} style={styles.actionBtn}>
+          <Ionicons name="pencil-outline" size={18} color={Colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }} style={styles.actionBtn}>
+          <Ionicons name="trash-outline" size={18} color={Colors.error} />
+        </TouchableOpacity>
+      </View>
     </View>
+  );
+
+  const renderWishItem = (item: WishlistItem) => (
+    <View key={item.id} style={styles.wishItem}>
+      <View style={styles.wishBody}>
+        <Text style={styles.wishName}>{item.name}</Text>
+        {item.memo ? <Text style={styles.wishMemo}>{item.memo}</Text> : null}
+        {item.url ? <Text style={styles.wishUrl} numberOfLines={1}>{item.url}</Text> : null}
+        {item.created_by_name ? (
+          <Text style={styles.wishCreatedBy}>起票者: {item.created_by_name}</Text>
+        ) : null}
+      </View>
+      <View style={styles.itemActions}>
+        <TouchableOpacity onPress={() => openEditWish(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }} style={styles.actionBtn}>
+          <Ionicons name="pencil-outline" size={18} color={Colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDeleteWish(item)} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }} style={styles.actionBtn}>
+          <Ionicons name="trash-outline" size={18} color={Colors.error} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const ListFooter = () => (
+    <>
+      {done.length > 0 && (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>完了済み ({done.length})</Text>
+          </View>
+          {done.map(item => (
+            <View key={item.id}>{renderTodoItem({ item })}</View>
+          ))}
+        </>
+      )}
+
+      {/* Wishlist section */}
+      <View style={styles.wishlistSection}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionLabel}>ウィッシュリスト ({wishlists.length})</Text>
+          </View>
+          <TouchableOpacity style={styles.sectionAddBtn} onPress={openAddWish}>
+            <Ionicons name="add" size={18} color={Colors.primary} />
+            <Text style={styles.sectionAddBtnText}>追加</Text>
+          </TouchableOpacity>
+        </View>
+        {wishlists.length === 0 ? (
+          <Text style={styles.wishEmpty}>欲しいものを登録しましょう</Text>
+        ) : (
+          wishlists.map(renderWishItem)
+        )}
+      </View>
+      <View style={{ height: 40 }} />
+    </>
   );
 
   return (
@@ -146,44 +285,41 @@ export default function TodoScreen() {
         <View style={[styles.header, isDesktop && styles.headerDesktop]}>
           <Text style={styles.headerCount}>{pending.length}件のタスク</Text>
           <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-            <Text style={styles.addBtnText}>+ 追加</Text>
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text style={styles.addBtnText}>追加</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
           <LoadingView />
-        ) : todos.length === 0 ? (
-          <EmptyState title="タスクがありません" subtitle="「+ 追加」ボタンからタスクを登録しましょう" />
         ) : (
           <FlatList
             data={pending}
             keyExtractor={t => t.id}
             contentContainerStyle={styles.list}
-            renderItem={renderItem}
+            renderItem={renderTodoItem}
+            ListEmptyComponent={
+              todos.length === 0 ? (
+                <EmptyState title="タスクがありません" subtitle="「追加」ボタンからタスクを登録しましょう" />
+              ) : null
+            }
             ListHeaderComponent={pending.length > 0 ? (
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionLabel}>未完了 ({pending.length})</Text>
               </View>
             ) : null}
-            ListFooterComponent={done.length > 0 ? (
-              <>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionLabel}>完了済み ({done.length})</Text>
-                </View>
-                {done.map(item => (
-                  <View key={item.id}>{renderItem({ item })}</View>
-                ))}
-              </>
-            ) : null}
+            ListFooterComponent={<ListFooter />}
           />
         )}
       </View>
 
+      {/* Todo modal */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalCancel}>キャンセル</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}>
+              <Ionicons name="close" size={20} color={Colors.textSecondary} />
+              <Text style={styles.closeBtnText}>キャンセル</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>{editingTodo ? 'タスクを編集' : 'タスクを追加'}</Text>
             <TouchableOpacity onPress={handleSave} disabled={saving}>
@@ -202,6 +338,15 @@ export default function TodoScreen() {
               placeholder="例: 買い物に行く"
               placeholderTextColor={Colors.textSecondary}
               autoFocus
+            />
+            <Text style={styles.label}>メモ (任意)</Text>
+            <TextInput
+              style={[styles.input, styles.inputMulti]}
+              value={note}
+              onChangeText={setNote}
+              placeholder="詳細・補足など"
+              placeholderTextColor={Colors.textSecondary}
+              multiline
             />
             <Text style={styles.label}>期限 (任意)</Text>
             <DatePickerField value={dueDate} onChange={setDueDate} placeholder="期限なし" />
@@ -240,6 +385,56 @@ export default function TodoScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Wishlist modal */}
+      <Modal visible={wishModalVisible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modal}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setWishModalVisible(false)}>
+              <Ionicons name="close" size={20} color={Colors.textSecondary} />
+              <Text style={styles.closeBtnText}>キャンセル</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{editingWish ? 'ウィッシュを編集' : 'ウィッシュを追加'}</Text>
+            <TouchableOpacity onPress={handleSaveWish} disabled={wishSaving}>
+              <Text style={[styles.modalDone, wishSaving && styles.disabled]}>
+                {wishSaving ? '保存中...' : '保存'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+            <Text style={styles.label}>名前 *</Text>
+            <TextInput
+              style={styles.input}
+              value={wishName}
+              onChangeText={setWishName}
+              placeholder="例: ワイヤレスイヤホン"
+              placeholderTextColor={Colors.textSecondary}
+              autoFocus
+            />
+            <Text style={styles.label}>メモ (任意)</Text>
+            <TextInput
+              style={[styles.input, styles.inputMulti]}
+              value={wishMemo}
+              onChangeText={setWishMemo}
+              placeholder="色・サイズなど"
+              placeholderTextColor={Colors.textSecondary}
+              multiline
+            />
+            <Text style={styles.label}>URL (任意)</Text>
+            <TextInput
+              style={styles.input}
+              value={wishUrl}
+              onChangeText={setWishUrl}
+              placeholder="https://..."
+              placeholderTextColor={Colors.textSecondary}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -260,11 +455,18 @@ const styles = StyleSheet.create({
   },
   headerDesktop: { padding: 16 },
   headerCount: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
-  addBtn: { backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, borderRadius: 8, justifyContent: 'center' },
+  addBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: Colors.primary, paddingHorizontal: 14, paddingVertical: 10,
+    minHeight: 44, borderRadius: 8, justifyContent: 'center',
+  },
   addBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   list: { paddingVertical: 8 },
   sectionHeader: { paddingVertical: 8, paddingHorizontal: 4 },
   sectionLabel: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionAddBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, paddingHorizontal: 4 },
+  sectionAddBtnText: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
   item: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface, borderRadius: 8,
@@ -272,21 +474,37 @@ const styles = StyleSheet.create({
     padding: 12, marginBottom: 8, gap: 12,
   },
   itemDone: { opacity: 0.6 },
-  checkbox: { padding: 2 },
+  checkboxWrap: { padding: 2 },
   checkboxInner: {
     width: 22, height: 22, borderRadius: 11,
     borderWidth: 2, borderColor: Colors.border,
     alignItems: 'center', justifyContent: 'center',
   },
   checkboxChecked: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  checkmark: { color: '#fff', fontSize: 13, fontWeight: '700' },
   itemBody: { flex: 1 },
   itemTitle: { fontSize: 16, color: Colors.text, fontWeight: '500' },
   itemTitleDone: { textDecorationLine: 'line-through', color: Colors.textSecondary },
+  itemNote: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   itemDue: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   itemDueOverdue: { color: '#e53e3e', fontWeight: '600' },
   itemAssignee: { fontSize: 12, color: Colors.primary, marginTop: 2, fontWeight: '600' },
-  deleteText: { fontSize: 14, color: Colors.primaryDark, fontWeight: '700' },
+  itemActions: { flexDirection: 'row', gap: 4 },
+  actionBtn: { padding: 6 },
+  // Wishlist
+  wishlistSection: { marginTop: 16 },
+  wishItem: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.surface, borderRadius: 8,
+    borderWidth: 1, borderColor: Colors.border,
+    padding: 12, marginBottom: 8,
+  },
+  wishBody: { flex: 1 },
+  wishName: { fontSize: 15, color: Colors.text, fontWeight: '600' },
+  wishMemo: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  wishUrl: { fontSize: 12, color: Colors.primary, marginTop: 2 },
+  wishCreatedBy: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  wishEmpty: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', paddingVertical: 16 },
+  // Modal
   modal: { flex: 1, backgroundColor: Colors.background },
   modalHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -294,7 +512,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   modalTitle: { fontSize: 16, fontWeight: '600', color: Colors.text },
-  modalCancel: { fontSize: 16, color: Colors.textSecondary },
+  closeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, minWidth: 80 },
+  closeBtnText: { fontSize: 14, color: Colors.textSecondary },
   modalDone: { fontSize: 16, fontWeight: '700', color: Colors.primary },
   disabled: { opacity: 0.4 },
   modalBody: { padding: 16 },
@@ -303,6 +522,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 8,
     borderWidth: 1, borderColor: Colors.border, padding: 12, minHeight: 44, fontSize: 16, color: Colors.text,
   },
+  inputMulti: { minHeight: 80, textAlignVertical: 'top' },
   clearDate: { fontSize: 13, color: Colors.error, marginTop: 6, textAlign: 'center' },
   assigneeList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   assigneeChip: {
