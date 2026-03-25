@@ -30,13 +30,13 @@ export default function TabLayout() {
           paddingBottom: 4,
           height: 60,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 13, fontWeight: '600' },
         headerStyle: { backgroundColor: Colors.primary },
         headerTintColor: Colors.background,
         headerTitleStyle: { fontWeight: '700', fontSize: 18 },
         headerRight: () => (
           <TouchableOpacity onPress={handleLogout} style={{ marginRight: 16 }}>
-            <Text style={{ color: Colors.background, fontSize: 13 }}>{user?.name} ログアウト</Text>
+            <Text style={{ color: Colors.background, fontSize: 14 }}>{user?.name} ログアウト</Text>
           </TouchableOpacity>
         ),
       }}

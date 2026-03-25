@@ -25,5 +25,5 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
-  text: { fontSize: 12, fontWeight: '600' },
+  text: { fontSize: 13, fontWeight: '600' },
 });

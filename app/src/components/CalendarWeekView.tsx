@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   todayHeader: { backgroundColor: Colors.primary },
-  dayLabel: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  dateLabel: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  dayLabel: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  dateLabel: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   todayLabel: { color: Colors.background },
   todayDot: {
     width: 6,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   mealsContainer: { flex: 1, padding: 12 },
   mealSlot: { marginBottom: 10 },
-  mealTypeLabel: { fontSize: 11, color: Colors.textSecondary, marginBottom: 6, fontWeight: '600' },
+  mealTypeLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 6, fontWeight: '600' },
   mealItems: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   mealItemsDesktop: { gap: 8 },
   mealChip: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     maxWidth: 220,
   },
-  mealChipText: { fontSize: 13, fontWeight: '500', color: Colors.text },
+  mealChipText: { fontSize: 14, fontWeight: '500', color: Colors.text },
   addButton: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -152,5 +152,5 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderStyle: 'dashed',
   },
-  addButtonText: { fontSize: 12, color: Colors.textSecondary },
+  addButtonText: { fontSize: 13, color: Colors.textSecondary },
 });

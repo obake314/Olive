@@ -93,7 +93,7 @@ export function CalendarMonthView({ year, month, mealPlans, onDayPress, onAddMea
 const styles = StyleSheet.create({
   container: { flex: 1 },
   dowRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: Colors.border, paddingVertical: 6 },
-  dowLabel: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  dowLabel: { flex: 1, textAlign: 'center', fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   sun: { color: '#e05' },
   sat: { color: '#05e' },
   weekRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: Colors.border, minHeight: 80 },
@@ -101,9 +101,9 @@ const styles = StyleSheet.create({
     flex: 1, padding: 4, borderRightWidth: 1, borderColor: Colors.border,
   },
   cellToday: { backgroundColor: Colors.accent },
-  dayNum: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 2 },
+  dayNum: { fontSize: 14, fontWeight: '600', color: Colors.text, marginBottom: 2 },
   dayNumToday: { color: Colors.primary },
   planList: { gap: 2 },
-  planText: { fontSize: 10, color: Colors.text, lineHeight: 14 },
-  addHint: { fontSize: 10, color: Colors.textSecondary },
+  planText: { fontSize: 13, color: Colors.text, lineHeight: 18 },
+  addHint: { fontSize: 13, color: Colors.textSecondary },
 });

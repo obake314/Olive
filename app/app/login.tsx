@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   brandCardTitle: { fontSize: 24, lineHeight: 34, color: Colors.primaryDark, fontWeight: '700', marginBottom: 12 },
-  brandCardText: { fontSize: 15, lineHeight: 24, color: Colors.primaryDark },
+  brandCardText: { fontSize: 16, lineHeight: 24, color: Colors.primaryDark },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 10,
@@ -172,16 +172,17 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', marginBottom: 20, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: Colors.background },
   tabActive: { backgroundColor: Colors.primary },
-  tabText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
+  tabText: { fontSize: 16, fontWeight: '600', color: Colors.textSecondary },
   tabTextActive: { color: Colors.background },
   input: {
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
     padding: 14,
-    fontSize: 15,
+    minHeight: 44,
+    fontSize: 16,
     color: Colors.text,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     marginBottom: 12,
   },
   btn: {
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
   btnText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { marginHorizontal: 12, fontSize: 12, color: Colors.textSecondary },
+  dividerText: { marginHorizontal: 12, fontSize: 13, color: Colors.textSecondary },
   successText: { color: '#2d7a4a', fontSize: 13, marginBottom: 12, textAlign: 'center', backgroundColor: '#e6f4ea', padding: 10, borderRadius: 6 },
   errorText: { color: Colors.primaryDark, fontSize: 13, marginBottom: 12, textAlign: 'center' },
   demoBtn: {
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
   },
-  demoBtnText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
+  demoBtnText: { color: Colors.primary, fontSize: 16, fontWeight: '600' },
 });

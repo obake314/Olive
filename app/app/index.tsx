@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   heroImageWrapDesktop: { aspectRatio: 4 / 3 },
   heroImage: { width: '100%', height: '100%' },
   heroTitle: { fontSize: 28, fontWeight: '800', color: Colors.primaryDark, lineHeight: 40, marginBottom: 12 },
-  heroSubtitle: { fontSize: 15, color: Colors.textSecondary, lineHeight: 24 },
+  heroSubtitle: { fontSize: 16, color: Colors.textSecondary, lineHeight: 24 },
   heroRight: { width: '100%', marginTop: 32 },
   heroRightDesktop: { width: 380, marginTop: 0, flexShrink: 0 },
 
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   sectionInner: { maxWidth: 1100, alignSelf: 'center', width: '100%', paddingVertical: 60, paddingHorizontal: 24 },
   sectionInnerDesktop: { paddingHorizontal: 40 },
   sectionTitle: { fontSize: 24, fontWeight: '800', color: Colors.primaryDark, textAlign: 'center', marginBottom: 8 },
-  sectionSubtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginBottom: 36 },
+  sectionSubtitle: { fontSize: 16, color: Colors.textSecondary, textAlign: 'center', marginBottom: 36 },
 
   // Features
   featureGrid: { gap: 16 },
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   featureCardDesktop: { flex: 1, minWidth: 280, maxWidth: '31%' },
   featureTitle: { fontSize: 16, fontWeight: '700', color: Colors.primaryDark, marginBottom: 8 },
-  featureDesc: { fontSize: 13, color: Colors.textSecondary, lineHeight: 21 },
+  featureDesc: { fontSize: 14, color: Colors.textSecondary, lineHeight: 22 },
 
   // Steps
   stepsWrap: { gap: 16 },
@@ -300,13 +300,13 @@ const styles = StyleSheet.create({
   stepNumText: { color: '#fff', fontWeight: '800', fontSize: 18 },
   stepArrow: { position: 'absolute', right: -14, top: 32, zIndex: 1 },
   stepArrowText: { fontSize: 18, color: Colors.primaryLight },
-  stepTitle: { fontSize: 15, fontWeight: '700', color: Colors.primaryDark, marginBottom: 6, textAlign: 'center' },
-  stepDesc: { fontSize: 12, color: Colors.textSecondary, lineHeight: 19, textAlign: 'center' },
+  stepTitle: { fontSize: 16, fontWeight: '700', color: Colors.primaryDark, marginBottom: 6, textAlign: 'center' },
+  stepDesc: { fontSize: 13, color: Colors.textSecondary, lineHeight: 21, textAlign: 'center' },
 
   // Footer
   footer: { paddingVertical: 28, paddingHorizontal: 24, alignItems: 'center', gap: 6, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e8e8e8' },
   footerLogo: { fontSize: 16, fontWeight: '800', color: Colors.primaryDark },
-  footerCopy: { fontSize: 11, color: Colors.textSecondary },
+  footerCopy: { fontSize: 13, color: Colors.textSecondary },
 });
 
 const formStyles = StyleSheet.create({
@@ -325,27 +325,27 @@ const formStyles = StyleSheet.create({
   tabs: { flexDirection: 'row', marginBottom: 20, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: Colors.border },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: Colors.background },
   tabActive: { backgroundColor: Colors.primary },
-  tabText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
+  tabText: { fontSize: 16, fontWeight: '600', color: Colors.textSecondary },
   tabTextActive: { color: '#fff' },
   input: {
     borderWidth: 1, borderColor: Colors.border, borderRadius: 8,
-    padding: 13, fontSize: 15, color: Colors.text,
-    backgroundColor: Colors.background, marginBottom: 12,
+    padding: 13, minHeight: 44, fontSize: 16, color: Colors.text,
+    backgroundColor: Colors.surface, marginBottom: 12,
   },
   btn: {
     backgroundColor: Colors.primary, borderRadius: 8,
     padding: 15, alignItems: 'center', marginTop: 4,
   },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { marginHorizontal: 12, fontSize: 12, color: Colors.textSecondary },
+  dividerText: { marginHorizontal: 12, fontSize: 13, color: Colors.textSecondary },
   successText: { color: '#2d7a4a', fontSize: 13, marginBottom: 12, textAlign: 'center', backgroundColor: '#e6f4ea', padding: 10, borderRadius: 6 },
   errorText: { color: Colors.error, fontSize: 13, marginBottom: 12, textAlign: 'center' },
   demoBtn: {
     borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 8,
-    padding: 15, alignItems: 'center', backgroundColor: Colors.background,
+    padding: 15, alignItems: 'center', backgroundColor: Colors.surface,
   },
-  demoBtnText: { color: Colors.primary, fontSize: 14, fontWeight: '600' },
+  demoBtnText: { color: Colors.primary, fontSize: 16, fontWeight: '600' },
 });
