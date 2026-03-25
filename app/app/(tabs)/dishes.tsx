@@ -34,14 +34,9 @@ async function pickAndCompressImage(): Promise<string | undefined> {
     allowsEditing: true,
     aspect: [4, 3],
     quality: 0.8,
-    base64: Platform.OS === 'web',
   });
   if (result.canceled || !result.assets[0]) return undefined;
   const asset = result.assets[0];
-
-  if (Platform.OS === 'web') {
-    return asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : undefined;
-  }
 
   const manipulated = await ImageManipulator.manipulateAsync(
     asset.uri,
