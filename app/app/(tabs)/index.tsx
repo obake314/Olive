@@ -411,7 +411,7 @@ export default function CalendarScreen() {
             )}
             ListEmptyComponent={
               <Text style={styles.emptyText}>
-                {dishes.length === 0 ? '料理マスタを先に登録してください' : '該当なし'}
+                {dishes.length === 0 ? '料理を先に登録してください' : '該当なし'}
               </Text>
             }
           />
@@ -444,7 +444,7 @@ export default function CalendarScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  page: { flex: 1, width: '100%', alignSelf: 'center' },
+  page: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 12, paddingTop: 12, paddingBottom: 12 },
   pageDesktop: { maxWidth: 1280, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 },
   contentTabs: {
     flexDirection: 'row', marginBottom: 8,

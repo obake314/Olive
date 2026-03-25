@@ -45,8 +45,8 @@ export default function ShoppingScreen() {
 
   const handleGenerate = async () => {
     Alert.alert(
-      '買い物リスト生成',
-      'この週の献立から買い物リストを自動生成します。\n既存の自動生成アイテムは置き換えられます。',
+      '買い物生成',
+      'この週の献立から買い物を自動生成します。\n既存の自動生成アイテムは置き換えられます。',
       [
         { text: 'キャンセル', style: 'cancel' },
         {
@@ -153,7 +153,7 @@ export default function ShoppingScreen() {
             <LoadingView />
           ) : items.length === 0 ? (
             <EmptyState
-              title="買い物リストが空です"
+              title="買い物が空です"
               subtitle="「献立から生成」を押すか、手動でアイテムを追加してください"
             />
           ) : (

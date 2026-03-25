@@ -208,7 +208,7 @@ router.get('/users/:id/dishes', (req: Request, res: Response) => {
     <div class="stat-card"><div class="val">${withImage}</div><div class="lbl">画像あり</div></div>
     <div class="stat-card"><div class="val">${dishes.length - withImage}</div><div class="lbl">画像なし</div></div>
   </div>
-  <p class="page-title">${esc(user.name)} (${esc(user.email)}) の料理マスタ</p>
+  <p class="page-title">${esc(user.name)} (${esc(user.email)}) の料理</p>
   <div class="dishes-grid">${cards}</div>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');

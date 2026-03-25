@@ -83,7 +83,7 @@ export default function FamilyScreen() {
         /* グループ未所属 */
         <View style={styles.card}>
           <Text style={styles.cardTitle}>家族グループを作成</Text>
-          <Text style={styles.cardDesc}>グループを作成して家族を招待すると、献立・TODO・料理マスタを共有できます。</Text>
+          <Text style={styles.cardDesc}>グループを作成して家族を招待すると、献立・TODO・料理を共有できます。</Text>
           <Text style={styles.label}>グループ名</Text>
           <TextInput
             style={styles.input}

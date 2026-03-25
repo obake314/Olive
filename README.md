@@ -7,9 +7,9 @@ iOS・Web 対応の家族共有献立管理アプリです。
 | 機能 | 説明 |
 |---|---|
 | カレンダー献立登録 | 日付×朝/昼/夜ごとに献立を登録 |
-| 料理マスタ| 料理名・レシピURL・材料一覧を管理 |
+| 料理| 料理名・レシピURL・材料一覧を管理 |
 | 材料管理 | 材料名・数量・単位を料理に紐付け |
-| 買い物リスト自動生成 | 週単位で食材を合算、チェックボックス付き |
+| 買い物自動生成 | 週単位で食材を合算、チェックボックス付き |
 | レシピURL保存 | 料理にレシピURLを保存、タップで開く |
 
 ## アーキテクチャ
@@ -21,16 +21,16 @@ Olive/
 │       ├── index.ts
 │       ├── db/database.ts
 │       └── routes/
-│           ├── dishes.ts      # 料理マスタ CRUD
+│           ├── dishes.ts      # 料理 CRUD
 │           ├── mealPlans.ts   # 献立 CRUD
-│           └── shopping.ts   # 買い物リスト
+│           └── shopping.ts   # 買い物
 └── app/              # Expo (React Native) - iOS & Web
     ├── app/
     │   ├── _layout.tsx
     │   └── (tabs)/
     │       ├── index.tsx      # カレンダー画面
-    │       ├── dishes.tsx     # 料理マスタ画面
-    │       └── shopping.tsx   # 買い物リスト画面
+    │       ├── dishes.tsx     # 料理画面
+    │       └── shopping.tsx   # 買い物画面
     └── src/
         ├── api/client.ts
         ├── hooks/
@@ -75,7 +75,7 @@ EXPO_PUBLIC_API_URL=http://localhost:3000
 
 ## API エンドポイント
 
-### 料理マスタ
+### 料理
 | メソッド | パス | 説明 |
 |---|---|---|
 | GET | `/dishes` | 一覧取得 |
@@ -90,7 +90,7 @@ EXPO_PUBLIC_API_URL=http://localhost:3000
 | POST | `/meal-plans` | 追加 |
 | DELETE | `/meal-plans/:id` | 削除 |
 
-### 買い物リスト
+### 買い物
 | メソッド | パス | 説明 |
 |---|---|---|
 | GET | `/shopping?week_start=` | 週の一覧取得 |

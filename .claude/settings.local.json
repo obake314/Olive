@@ -5,7 +5,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Read(//private/var/folders/**)",
-      "Read(//Users/t_okazaki/Downloads/**)"
+      "Read(//Users/t_okazaki/Downloads/**)",
+      "Bash(curl -s \"https://en.wikipedia.org/w/api.php?action=query&titles=Japanese+curry&prop=pageimages&format=json&pithumbsize=800\")",
+      "Bash(python3 -m json.tool)"
     ]
   }
 }

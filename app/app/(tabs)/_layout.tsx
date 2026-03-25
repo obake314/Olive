@@ -52,17 +52,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dishes"
         options={{
-          title: '料理マスタ',
+          title: '料理',
           tabBarIcon: ({ focused }) => <TabIcon label="料" focused={focused} />,
-          headerTitle: 'Olive 料理マスタ',
+          headerTitle: 'Olive 料理',
         }}
       />
       <Tabs.Screen
         name="shopping"
         options={{
-          title: '買い物リスト',
+          title: '買い物',
           tabBarIcon: ({ focused }) => <TabIcon label="買" focused={focused} />,
-          headerTitle: 'Olive 買い物リスト',
+          headerTitle: 'Olive 買い物',
         }}
       />
       <Tabs.Screen
