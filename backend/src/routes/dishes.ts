@@ -49,6 +49,7 @@ router.get('/', (req: AuthRequest, res: Response) => {
 
   const result = dishes.map((d: any) => ({
     ...d,
+    tags: d.tags ? d.tags.split(',').filter(Boolean) : [],
     ingredients: JSON.parse(d.ingredients_json).filter((i: any) => i !== null),
     ingredients_json: undefined,
   }));
@@ -74,7 +75,7 @@ router.get('/:id', (req: AuthRequest, res: Response) => {
 
 // POST /dishes
 router.post('/', async (req: AuthRequest, res: Response) => {
-  const { name, recipe_url, recipe_text, image_data, ingredients = [] } = req.body;
+  const { name, recipe_url, recipe_text, image_data, tags = [], ingredients = [] } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   let processedImage: string | null = null;
@@ -85,8 +86,9 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
   const db = getDb();
   const id = uuidv4();
-  db.prepare('INSERT INTO dishes (id, user_id, name, recipe_url, recipe_text, image_data) VALUES (?, ?, ?, ?, ?, ?)').run(
-    id, req.userId, name, recipe_url || null, recipe_text || null, processedImage
+  const tagsStr = Array.isArray(tags) ? tags.join(',') : '';
+  db.prepare('INSERT INTO dishes (id, user_id, name, recipe_url, recipe_text, image_data, tags) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+    id, req.userId, name, recipe_url || null, recipe_text || null, processedImage, tagsStr
   );
 
   const insertIngredient = db.prepare(
@@ -99,9 +101,9 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   });
   insertMany(ingredients);
 
-  const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(id);
+  const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(id) as any;
   const savedIngredients = db.prepare('SELECT * FROM ingredients WHERE dish_id = ?').all(id);
-  res.status(201).json({ ...(dish as any), ingredients: savedIngredients });
+  res.status(201).json({ ...dish, tags: dish.tags ? dish.tags.split(',').filter(Boolean) : [], ingredients: savedIngredients });
 });
 
 // PUT /dishes/:id
@@ -110,7 +112,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   const existing = db.prepare('SELECT * FROM dishes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
-  const { name, recipe_url, recipe_text, image_data, ingredients } = req.body;
+  const { name, recipe_url, recipe_text, image_data, tags, ingredients } = req.body;
 
   let processedImage = (existing as any).image_data;
   if (image_data !== undefined) {
@@ -122,11 +124,16 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
     }
   }
 
-  db.prepare('UPDATE dishes SET name = ?, recipe_url = ?, recipe_text = ?, image_data = ? WHERE id = ?').run(
+  const tagsStr = tags !== undefined
+    ? (Array.isArray(tags) ? tags.join(',') : '')
+    : (existing as any).tags ?? '';
+
+  db.prepare('UPDATE dishes SET name = ?, recipe_url = ?, recipe_text = ?, image_data = ?, tags = ? WHERE id = ?').run(
     name ?? (existing as any).name,
     recipe_url !== undefined ? recipe_url : (existing as any).recipe_url,
     recipe_text !== undefined ? recipe_text : (existing as any).recipe_text,
     processedImage,
+    tagsStr,
     req.params.id
   );
 
@@ -143,9 +150,9 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
     insertMany(ingredients);
   }
 
-  const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(req.params.id);
+  const dish = db.prepare('SELECT * FROM dishes WHERE id = ?').get(req.params.id) as any;
   const savedIngredients = db.prepare('SELECT * FROM ingredients WHERE dish_id = ?').all(req.params.id);
-  res.json({ ...(dish as any), ingredients: savedIngredients });
+  res.json({ ...dish, tags: dish.tags ? dish.tags.split(',').filter(Boolean) : [], ingredients: savedIngredients });
 });
 
 // DELETE /dishes/:id

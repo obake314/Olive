@@ -62,7 +62,7 @@ docker run --rm \
 # 一時コンテナ停止
 docker stop olive-nginx-init 2>/dev/null || true
 
-echo "✅ SSL証明書取得完了!"
+echo " SSL証明書取得完了!"
 echo ""
 echo "次のステップ: mainブランチにpushしてデプロイしてください"
 echo "  または手動でデプロイ済みの場合:"

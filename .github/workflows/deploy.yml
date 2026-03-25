@@ -112,7 +112,7 @@ jobs:
             # 古いイメージを削除
             docker image prune -f
 
-            echo "✅ Deploy complete: $IMAGE_TAG"
+            echo " Deploy complete: $IMAGE_TAG"
 
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
@@ -126,4 +126,4 @@ jobs:
             docker compose ps
             # ヘルスチェック (backend に直接確認)
             curl -sf http://localhost:3003/health || (echo "❌ Health check failed" && exit 1)
-            echo "✅ Health check passed"
+            echo " Health check passed"

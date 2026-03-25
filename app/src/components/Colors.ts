@@ -8,7 +8,7 @@ export const Colors = {
   text: '#354a2f',
   textSecondary: '#5c724a',
   border: '#c7b793',
-  error: '#354a2f',
+  error: '#c0392b',
   success: '#5c724a',
   breakfast: '#f5f5d5',
   lunch: '#c7b793',

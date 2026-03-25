@@ -14,6 +14,7 @@ export interface Dish {
   recipe_url?: string;
   recipe_text?: string;
   image_data?: string;
+  tags: string[];
   created_at: string;
   ingredients: Ingredient[];
 }
