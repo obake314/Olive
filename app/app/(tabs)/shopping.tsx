@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, Modal, TextInput, SectionList, useWindowDimensions
+  Alert, Modal, TextInput, SectionList, useWindowDimensions, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -122,13 +122,18 @@ export default function ShoppingScreen() {
   };
 
   const handleDelete = (item: ShoppingItem) => {
-    Alert.alert('削除', `「${item.name}」を削除しますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      { text: '削除', style: 'destructive', onPress: async () => {
-        try { await deleteItem(item.id); }
-        catch (e: any) { Alert.alert('エラー', e.message); }
-      }},
-    ]);
+    const doDelete = async () => {
+      try { await deleteItem(item.id); }
+      catch (e: any) { Alert.alert('エラー', e.message); }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`「${item.name}」を削除しますか？`)) doDelete();
+    } else {
+      Alert.alert('削除', `「${item.name}」を削除しますか？`, [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '削除', style: 'destructive', onPress: doDelete },
+      ]);
+    }
   };
 
   // 日ビュー時は selectedDay に該当する項目のみ（全期間分は週単位なのでフィルタなし実質全件）

@@ -5,9 +5,43 @@ import { getDb } from '../db/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-router.use(authenticate);
 const resend = new Resend(process.env.RESEND_API_KEY);
 const APP_URL = process.env.APP_URL || 'https://olive.eclo.info';
+
+// GET /family/join は認証不要（メールリンクから直接アクセス）
+router.get('/join', (req, res: Response) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).send('無効なリンクです') as any;
+
+  const db = getDb();
+  const inv = db.prepare('SELECT * FROM family_invitations WHERE token = ?').get(token) as any;
+  if (!inv) return res.status(400).send('このリンクは無効または期限切れです') as any;
+  if (new Date(inv.expires_at) < new Date()) {
+    db.prepare('DELETE FROM family_invitations WHERE token = ?').run(token);
+    return res.status(400).send('このリンクは期限切れです') as any;
+  }
+
+  const user = db.prepare('SELECT id FROM users WHERE email = ?').get(inv.invited_email) as any;
+  if (!user) {
+    return res.redirect(`${APP_URL}/login?invite=${token}&email=${encodeURIComponent(inv.invited_email)}`);
+  }
+
+  const existingMembership = db.prepare(
+    `SELECT family_id FROM family_members WHERE user_id = ? AND status = 'active'`
+  ).get(user.id) as any;
+  if (existingMembership && existingMembership.family_id !== inv.family_id) {
+    return res.redirect(`${APP_URL}?error=already_in_family`);
+  }
+
+  db.prepare(`INSERT OR REPLACE INTO family_members (id, family_id, user_id, status, invited_by) VALUES (?, ?, ?, 'active', ?)`)
+    .run(uuidv4(), inv.family_id, user.id, inv.invited_by);
+  db.prepare('DELETE FROM family_invitations WHERE token = ?').run(token);
+
+  res.redirect(`${APP_URL}?joined=1`);
+});
+
+// 以下は認証が必要なルート
+router.use(authenticate);
 
 // GET /family — 自分の家族情報
 router.get('/', (req: AuthRequest, res: Response) => {
@@ -86,41 +120,6 @@ router.post('/invite', async (req: AuthRequest, res: Response) => {
   }
 
   res.json({ message: `${email} に招待メールを送信しました` });
-});
-
-// GET /family/join?token=xxx — 招待承認
-router.get('/join', (req: AuthRequest, res: Response) => {
-  const { token } = req.query;
-  if (!token) return res.status(400).send('無効なリンクです') as any;
-
-  const db = getDb();
-  const inv = db.prepare('SELECT * FROM family_invitations WHERE token = ?').get(token) as any;
-  if (!inv) return res.status(400).send('このリンクは無効または期限切れです') as any;
-  if (new Date(inv.expires_at) < new Date()) {
-    db.prepare('DELETE FROM family_invitations WHERE token = ?').run(token);
-    return res.status(400).send('このリンクは期限切れです') as any;
-  }
-
-  // 招待されたメールのユーザーを探す
-  const user = db.prepare('SELECT id FROM users WHERE email = ?').get(inv.invited_email) as any;
-  if (!user) {
-    // 未登録の場合は登録画面へリダイレクト（token保持）
-    return res.redirect(`${APP_URL}/login?invite=${token}&email=${encodeURIComponent(inv.invited_email)}`);
-  }
-
-  // 既存の家族から離脱させてから追加
-  const existingMembership = db.prepare(
-    `SELECT family_id FROM family_members WHERE user_id = ? AND status = 'active'`
-  ).get(user.id) as any;
-  if (existingMembership && existingMembership.family_id !== inv.family_id) {
-    return res.redirect(`${APP_URL}?error=already_in_family`);
-  }
-
-  db.prepare(`INSERT OR REPLACE INTO family_members (id, family_id, user_id, status, invited_by) VALUES (?, ?, ?, 'active', ?)`)
-    .run(uuidv4(), inv.family_id, user.id, inv.invited_by);
-  db.prepare('DELETE FROM family_invitations WHERE token = ?').run(token);
-
-  res.redirect(`${APP_URL}?joined=1`);
 });
 
 // DELETE /family/leave — 家族から離脱

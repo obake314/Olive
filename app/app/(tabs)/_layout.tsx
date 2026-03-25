@@ -12,6 +12,26 @@ import { useAuth } from '../../src/context/AuthContext';
 import { familyApi } from '../../src/api/client';
 import { Family, FamilyMember } from '../../src/types';
 
+async function uriToBase64(uri: string): Promise<string> {
+  if (Platform.OS === 'web') {
+    // Web: fetch で blob → FileReader で base64 に変換
+    const res = await fetch(uri);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+  const manipulated = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 200 } }],
+    { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+  );
+  return manipulated.base64 ? `data:image/jpeg;base64,${manipulated.base64}` : uri;
+}
+
 async function pickAvatar(): Promise<string | undefined> {
   if (Platform.OS !== 'web') {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -24,12 +44,11 @@ async function pickAvatar(): Promise<string | undefined> {
     quality: 0.8,
   });
   if (result.canceled || !result.assets[0]) return undefined;
-  const manipulated = await ImageManipulator.manipulateAsync(
-    result.assets[0].uri,
-    [{ resize: { width: 200 } }],
-    { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-  );
-  return manipulated.base64 ? `data:image/jpeg;base64,${manipulated.base64}` : undefined;
+  try {
+    return await uriToBase64(result.assets[0].uri);
+  } catch {
+    return undefined;
+  }
 }
 
 function SettingsModal({ visible, onClose, onLogout }: {
